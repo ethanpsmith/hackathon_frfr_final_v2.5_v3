@@ -51,19 +51,19 @@ p.resetBaseVelocity(box_id_1, linearVelocity=[0, 0, 0])
 
 
 waypoint_list = [
-    [0,0,1],
-    [1,1,1],
+    [0,0,1.5],
+    [1,1,1.5],
     [1,1,0.5],
-    [1,1,1],
-    [0,0,1],
+    [1,1,1.5],
+    [0,0,1.5],
     [0,0,0.5]
 ]
 
 waypoint_index = 0
-arrival_radius = 0.1
+arrival_radius = 0.5
 
 
-def apply_force(box_id, target, kp_xy=5, kd_xy=1, kp_z=5, kd_z=1):
+def apply_force(box_id, target, kp_xy=5, kd_xy=3, kp_z=2, kd_z=1):
     position, orientation = p.getBasePositionAndOrientation(box_id)
     linear_velocity, angular_velocity = p.getBaseVelocity(box_id)
 
@@ -91,9 +91,16 @@ def apply_force(box_id, target, kp_xy=5, kd_xy=1, kp_z=5, kd_z=1):
 #box_id_2 = p.createMultiBody(baseMass=1, baseCollisionShapeIndex=box_1, basePosition=[0,0.5,4])
 # Advance physics and keep the window open
 while p.isConnected():
+    if waypoint_index >= len(waypoint_list):
+        print("Route complete")
+        break
+
+    target = waypoint_list[waypoint_index]
 
 
     target = waypoint_list[waypoint_index]
+
+
     position, orientation = p.getBasePositionAndOrientation(box_id_1)
 
     dx = target[0] - position[0]
@@ -101,14 +108,17 @@ while p.isConnected():
     dz = target[2] - position[2]
 
     distance = (dx**2 + dy**2 + dz**2) ** 0.5
-    try:
-        if distance < arrival_radius:
-            print(f"reached waypoint {waypoint_index}: {target}")
-            waypoint_index+=1
-            continue
-    except IndexError:
-        print("done")
-        time.sleep(100)
+    print(
+        f"waypoint {waypoint_index + 1}/{len(waypoint_list)} | "
+        f"position=({position[0]:.2f}, {position[1]:.2f}, {position[2]:.2f}) | "
+        f"distance={distance:.2f} m"
+    )
+
+    if distance < arrival_radius:
+        print(f"reached waypoint {waypoint_index}: {target}")
+        waypoint_index+=1
+        continue
+
 
 
     apply_force(box_id_1,target)
