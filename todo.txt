@@ -1,0 +1,3 @@
+plan for ts
+
+1. find/make 3d environment that i can add phyiscs shit to 
