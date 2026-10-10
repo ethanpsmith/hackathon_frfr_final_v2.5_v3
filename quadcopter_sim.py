@@ -16,8 +16,10 @@ except ImportError:
 
 
 
-DT = 0.5 / 240                  # Physics step, seconds.
+DT = 1 / 240                  # Physics step, seconds.
 CONTROL_EVERY = 10            # Run the flight controller every 10 physics steps.
+TELEMETRY_HZ = 10             # CSV samples per simulated second.
+TELEMETRY_EVERY = max(1, round(1.0 / (TELEMETRY_HZ * DT)))
 MASS = 5.4                    # kg
 SPAN = 0.886
 ROTOR_RADIUS = 0.095
@@ -36,17 +38,17 @@ ARRIVAL_DWELL = 0.4           # Seconds settled before advancing.
 GRAVITY = np.array([0.0, 0.0, -9.81])
 START_POSITION = [0.0, 0.0, 0.25]
 
-# Forward depth-camera and avoidance settings.  The camera is fixed to the
-# drone body: body +X is forward and body +Z is up.
+# Nose-mounted, gimballed depth-camera and avoidance settings.  The camera is
+# physically on the drone but levels itself and points toward the active route.
 CAMERA_WIDTH = 160
 CAMERA_HEIGHT = 120
 CAMERA_FOV = 120.0
 CAMERA_NEAR = 0.05
 CAMERA_FAR = 12.0
 CAMERA_EVERY = 20             # 12 camera frames/s at 240 Hz physics.
-AVOID_START_DISTANCE = 5.0    # Begin steering away when an obstacle is closer.
-AVOID_STOP_DISTANCE = 2.2     # Strongest braking/side-stepping distance.
-AVOID_MAX_SPEED = 4.0         # m/s velocity bias supplied by the camera.
+AVOID_START_DISTANCE = 7.0    # Begin steering away early enough to turn safely.
+AVOID_STOP_DISTANCE = 3.0     # Strongest braking/side-stepping distance.
+AVOID_MAX_SPEED = 5.0         # m/s velocity bias supplied by the camera.
 
 WAYPOINTS = np.array([
     [0.0, 0.0, 1.5],
@@ -198,13 +200,19 @@ def follow_drone_camera(position, quaternion):
     )
 
 
-def drone_camera_depth(drone, ground, position, rotation):
-    """Render a forward-facing body-mounted camera and return distance in m."""
-    # Mount the camera just ahead of the front propellers.  This keeps its
-    # normal view outside the arms/discs instead of staring through the drone.
+def drone_camera_depth(drone, ground, position, rotation, route_direction):
+    """Render the nose camera pointed along the current route direction."""
+    # The camera stays mounted ahead of the propellers, but its gimbal turns
+    # horizontally toward the waypoint.  Without this, the drone slides on a
+    # diagonal route while the fixed camera stares along world +X.
     eye = position + rotation @ np.array([ROTOR_OFFSET + 0.12, 0.0, 0.10])
-    forward = rotation[:, 0]  # Drone body +X.
-    up = rotation[:, 2]       # Drone body +Z.
+    forward = np.asarray(route_direction, dtype=float).copy()
+    forward[2] = 0.0
+    if np.linalg.norm(forward) < 1e-6:
+        forward = rotation[:, 0].copy()
+        forward[2] = 0.0
+    forward /= max(np.linalg.norm(forward), 1e-12)
+    up = np.array([0.0, 0.0, 1.0])  # Level stabilized camera.
     target = eye + CAMERA_FAR * forward
     view = p.computeViewMatrix(eye.tolist(), target.tolist(), up.tolist())
     projection = p.computeProjectionMatrixFOV(
@@ -232,12 +240,13 @@ def drone_camera_depth(drone, ground, position, rotation):
     depth_buffer[(object_ids == drone) | (object_ids == ground)] = 1.0
     # PyBullet returns a normalized OpenGL depth buffer.  Convert it to the
     # real distance along the camera viewing ray.
-    return CAMERA_FAR * CAMERA_NEAR / (
+    depth_meters = CAMERA_FAR * CAMERA_NEAR / (
         CAMERA_FAR - (CAMERA_FAR - CAMERA_NEAR) * depth_buffer
     )
+    return depth_meters, forward
 
 
-def camera_avoidance_velocity(depth_meters, position, rotation):
+def camera_avoidance_velocity(depth_meters, position, camera_forward, locked_side):
     """Turn the forward depth image into a world-frame velocity bias.
 
     The controller still owns the flight path.  This returns zero until an
@@ -247,7 +256,7 @@ def camera_avoidance_velocity(depth_meters, position, rotation):
     # Close to the floor the depth image is mostly the ground plane, not an
     # obstacle.  Let the normal take-off/landing controller operate there.
     if position[2] < 0.70:
-        return np.zeros(3), float('inf')
+        return np.zeros(3), float('inf'), 0.0
 
     h, w = depth_meters.shape
     # Ignore the very top/bottom of the image.  The lower edge can see ground
@@ -262,7 +271,7 @@ def camera_avoidance_velocity(depth_meters, position, rotation):
     left_distance = float(np.percentile(left, 5))
     right_distance = float(np.percentile(right, 5))
     if front_distance >= AVOID_START_DISTANCE:
-        return np.zeros(3), front_distance
+        return np.zeros(3), front_distance, 0.0
 
     strength = np.clip(
         (AVOID_START_DISTANCE - front_distance)
@@ -271,15 +280,17 @@ def camera_avoidance_velocity(depth_meters, position, rotation):
         1.0,
     )
 
-    # In this body convention, image-left points approximately toward body +Y
-    # and image-right toward body -Y.  Head toward the side with more clearance.
-    side = 1.0 if left_distance > right_distance else -1.0
-    avoidance_body = np.array([
-        -AVOID_MAX_SPEED * strength,         # brake/back away from the object
-        side * AVOID_MAX_SPEED * strength,   # pass on the clearer side
-        0.0,
-    ])
-    return rotation @ avoidance_body, front_distance
+    # Image-left is perpendicular to the camera's route-facing direction.
+    # Lock that choice until the box is clear so small depth changes cannot
+    # make the drone repeatedly swap left/right escape paths.
+    side = locked_side or (1.0 if left_distance > right_distance else -1.0)
+    camera_left = np.cross([0.0, 0.0, 1.0], camera_forward)
+    camera_left /= max(np.linalg.norm(camera_left), 1e-12)
+    avoidance_velocity = (
+        -AVOID_MAX_SPEED * strength * camera_forward
+        + side * AVOID_MAX_SPEED * strength * camera_left
+    )
+    return avoidance_velocity, front_distance, side
 
 class Weather:
     def __init__(self, seed):
@@ -442,6 +453,7 @@ def main():
     expected_delta_velocity = np.zeros(3)
     avoidance_velocity = np.zeros(3)
     camera_obstacle_distance = float('inf')
+    avoidance_side = 0.0
     waypoint_index, dwell, route_complete = 0, 0.0, False
     push_until = -1.0
     control_dt = DT * CONTROL_EVERY
@@ -456,7 +468,8 @@ def main():
         writer.writerow(['time_s', 'waypoint', 'x', 'y', 'z', 'vx', 'vy', 'vz',
                          'ax', 'ay', 'az', 'roll_rad', 'pitch_rad', 'yaw_rad',
                          'T0_N', 'T1_N', 'T2_N', 'T3_N', 'weather_Fx', 'weather_Fy',
-                         'weather_Fz', 'estimated_Fx', 'estimated_Fy', 'estimated_Fz',
+                         'weather_Fz', 'total_thrust_N', 'weather_force_N',
+                         'estimated_Fx', 'estimated_Fy', 'estimated_Fz',
                          'camera_obstacle_m', 'avoid_vx', 'avoid_vy', 'avoid_vz'])
     print('Four-rotor simulation. P: sideways push. W: toggle weather. Ctrl+C: exit.')
     if obstacles_enabled:
@@ -475,12 +488,17 @@ def main():
             omega = np.array(omega_tuple)
             rotation = np.array(p.getMatrixFromQuaternion(quaternion)).reshape(3, 3)
 
-            # Render the actual body-mounted camera at 12 Hz.  Only its depth
-            # image reaches this routine; it does not get obstacle coordinates.
+            # Render the actual body-mounted camera at 12 Hz.  The stabilized
+            # gimbal tracks the active waypoint, so it sees obstacles ahead of
+            # the route even when the drone translates sideways.
             if obstacles_enabled and step % CAMERA_EVERY == 0:
-                depth_meters = drone_camera_depth(drone, ground, position, rotation)
-                avoidance_velocity, camera_obstacle_distance = camera_avoidance_velocity(
-                    depth_meters, position, rotation)
+                route_direction = WAYPOINTS[waypoint_index] - position
+                depth_meters, camera_forward = drone_camera_depth(
+                    drone, ground, position, rotation, route_direction)
+                (avoidance_velocity,
+                 camera_obstacle_distance,
+                 avoidance_side) = camera_avoidance_velocity(
+                    depth_meters, position, camera_forward, avoidance_side)
 
             if step % CONTROL_EVERY == 0:
                 target = WAYPOINTS[waypoint_index]
@@ -524,12 +542,14 @@ def main():
                 print('Flight left the controller operating range. Reduce disturbances or retune.')
                 break
 
-            # 10 Hz telemetry, instead of flooding the terminal every physics step.
-            if step % 240 == 0:
+            # Fixed-rate CSV telemetry, rather than flooding a file every
+            # physics step.  Default: 10 samples per simulated second.
+            if step % TELEMETRY_EVERY == 0:
                 euler = p.getEulerFromQuaternion(quaternion)
                 if writer:
                     writer.writerow([sim_time, waypoint_index + 1, *position, *velocity,
                         *controller.acceleration, *euler, *actual_thrusts, *weather_force,
+                        actual_thrusts.sum(), np.linalg.norm(weather_force),
                         *(MASS * controller.disturbance_acceleration),
                         camera_obstacle_distance, *avoidance_velocity])
                 if not args.headless:
