@@ -15,39 +15,63 @@ except ImportError:
     p = None
 
 
-# ======================== SETTINGS YOU CAN CHANGE ========================
-DT = 0.1 / 240                 # Your requested PHYSICS step, unchanged.
-CONTROL_EVERY = 10             # Controller runs every 10 physics steps: 240 Hz.
-MASS = 1.0                    # Total kg; visual links have no extra mass.
-SPAN = 0.886                  # Total X/Y footprint, including rotor discs.
-ROTOR_RADIUS = 0.095          # Assumed propeller radius, m.
+
+DT = 0.5 / 240                  # Physics step, seconds.
+CONTROL_EVERY = 10            # Run the flight controller every 10 physics steps.
+MASS = 5.4                    # kg
+SPAN = 0.886
+ROTOR_RADIUS = 0.095
 ROTOR_OFFSET = SPAN / 2 - ROTOR_RADIUS
 ROTOR_Z = 0.055
-INERTIA = np.array([0.045, 0.045, 0.080])  # Assumed kg m^2 about body axes.
-MAX_ROTOR_THRUST = 8.0         # N per rotor; total maximum 32 N.
+INERTIA = np.array([0.36, 0.36, 0.71])  # Rough 5.4 kg, 0.886 m-square estimate.
+MAX_ROTOR_THRUST = 100.0       # N per rotor; 400 N total simulator limit.
 MOTOR_TIME_CONSTANT = 0.035    # Seconds, first-order thrust response.
 YAW_TORQUE_PER_THRUST = 0.02   # N m / N (assumed reaction torque coefficient).
 MAX_TILT = math.radians(30)
-MAX_XY_SPEED = 1.2            # m/s
-MAX_Z_SPEED = 0.8             # m/s
+MAX_XY_SPEED = 4.0            # m/s; gives the drone room to turn around obstacles.
+MAX_Z_SPEED = 1.5             # m/s
 ARRIVAL_RADIUS = 0.15         # m
 ARRIVAL_SPEED = 0.20          # m/s; passing through fast does not count.
 ARRIVAL_DWELL = 0.4           # Seconds settled before advancing.
 GRAVITY = np.array([0.0, 0.0, -9.81])
 START_POSITION = [0.0, 0.0, 0.25]
 
+# Forward depth-camera and avoidance settings.  The camera is fixed to the
+# drone body: body +X is forward and body +Z is up.
+CAMERA_WIDTH = 160
+CAMERA_HEIGHT = 120
+CAMERA_FOV = 120.0
+CAMERA_NEAR = 0.05
+CAMERA_FAR = 12.0
+CAMERA_EVERY = 20             # 12 camera frames/s at 240 Hz physics.
+AVOID_START_DISTANCE = 5.0    # Begin steering away when an obstacle is closer.
+AVOID_STOP_DISTANCE = 2.2     # Strongest braking/side-stepping distance.
+AVOID_MAX_SPEED = 4.0         # m/s velocity bias supplied by the camera.
+
 WAYPOINTS = np.array([
     [0.0, 0.0, 1.5],
-    [1.0, 1.0, 1.5],
-    [1.0, 1.0, 0.2],
-    [1.0, 1.0, 1.5],
+    [100.0, 100.0, 1.5],
+    [100.0, 100.0, 0.25],
+    [100.0, 100.0, 1.5],
     [0.0, 0.0, 1.5],
-    [0.0, 0.0, 0.2],
+    [0.0, 0.0, 0.25],
 ])
 
-MEAN_WIND = np.array([2.0, -0.8, 0.0])  # Wind velocity, m/s.
-GUST_RANGE = np.array([1.3, 1.3, 0.3])  # Random velocity changes, m/s.
-RAIN_LOAD = 0.20                         # N downward; 0 disables rain proxy.
+# [centre position, half-size] for static, collidable boxes.  They sit on the
+# diagonal flight leg so the depth camera has to guide the drone around them.
+OBSTACLE_LAYOUT = [
+    ([8.0, 8.0, 1.10], [0.45, 0.45, 1.10]),
+    ([28.0, 28.0, 1.25], [0.55, 0.55, 1.25]),
+    ([55.0, 55.0, 1.00], [0.50, 0.50, 1.00]),
+]
+
+MEAN_WIND = np.array([2.0, -0.8, 0.0])  # Average wind velocity, m/s.
+GUST_RANGE = np.array([1.3, 1.3, 0.3])  # Slow gust velocity range, m/s.
+TURBULENCE_RANGE = np.array([0.35, 0.35, 0.18])  # Faster turbulence velocity range, m/s.
+TURBULENCE_INTERVAL = 0.18              # Seconds between turbulence updates.
+RAIN_LOAD = 0.20                        # Mean downward rain load, N.
+RAIN_VARIATION = 0.10                   # Random rain-load variation, N.
+RAIN_LATERAL_FORCE = 0.08               # Small lateral rain disturbance, N.
 WEATHER_POINT = np.array([0.05, -0.04, 0.02])  # Body point; causes some torque.
 
 # All four positions are relative to the body's centre of mass.
@@ -72,6 +96,8 @@ def custom_external_force(sim_time, position, velocity):
     Holding a random value for a fraction of a second is easier to study than
     drawing a different value at all 2400 physics steps per second.
     """
+    # Leave this at zero during normal obstacle-avoidance runs.  Press P in
+    # the GUI to inject a short 3 N sideways push instead.
     return np.zeros(3)
 
 
@@ -96,7 +122,7 @@ class Controller:
         self.allocation_scale = 1.0
 
     def update(self, target, position, velocity, rotation, angular_velocity,
-               expected_acceleration, sample_dt):
+               expected_acceleration, sample_dt, avoidance_velocity):
         # 1. Infer acceleration from velocity feedback. Compare with the motion
         # predicted from LAST interval's applied motor thrust and gravity.
         # Low-pass the difference to estimate unmodelled forces (wind, pushes).
@@ -112,7 +138,7 @@ class Controller:
         self.previous_velocity = velocity.copy()
 
         # 2. Position error -> desired velocity, with speed limits.
-        desired_velocity = 1.3 * (target - position)
+        desired_velocity = 1.3 * (target - position) + avoidance_velocity
         desired_velocity[:2] = limit_length(desired_velocity[:2], MAX_XY_SPEED)
         desired_velocity[2] = np.clip(desired_velocity[2], -MAX_Z_SPEED, MAX_Z_SPEED)
 
@@ -158,22 +184,149 @@ class Controller:
                        0.0, MAX_ROTOR_THRUST)
 
 
+def follow_drone_camera(position, quaternion):
+    # Camera position relative to the drone
+    camera_distance = 3.0
+    camera_yaw = 45
+    camera_pitch = -25
+
+    p.resetDebugVisualizerCamera(
+        cameraDistance=camera_distance,
+        cameraYaw=camera_yaw,
+        cameraPitch=camera_pitch,
+        cameraTargetPosition=position.tolist(),
+    )
+
+
+def drone_camera_depth(drone, ground, position, rotation):
+    """Render a forward-facing body-mounted camera and return distance in m."""
+    # Mount the camera just ahead of the front propellers.  This keeps its
+    # normal view outside the arms/discs instead of staring through the drone.
+    eye = position + rotation @ np.array([ROTOR_OFFSET + 0.12, 0.0, 0.10])
+    forward = rotation[:, 0]  # Drone body +X.
+    up = rotation[:, 2]       # Drone body +Z.
+    target = eye + CAMERA_FAR * forward
+    view = p.computeViewMatrix(eye.tolist(), target.tolist(), up.tolist())
+    projection = p.computeProjectionMatrixFOV(
+        fov=CAMERA_FOV,
+        aspect=CAMERA_WIDTH / CAMERA_HEIGHT,
+        nearVal=CAMERA_NEAR,
+        farVal=CAMERA_FAR,
+    )
+    _, _, _, depth_buffer, segmentation = p.getCameraImage(
+        CAMERA_WIDTH,
+        CAMERA_HEIGHT,
+        viewMatrix=view,
+        projectionMatrix=projection,
+        renderer=p.ER_TINY_RENDERER,
+        flags=getattr(p, 'ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX', 0),
+    )
+    depth_buffer = np.asarray(depth_buffer, dtype=float).reshape(
+        CAMERA_HEIGHT, CAMERA_WIDTH)
+    segmentation = np.asarray(segmentation, dtype=np.int64).reshape(
+        CAMERA_HEIGHT, CAMERA_WIDTH)
+    # Segmentation stores the object unique ID in the low 24 bits.  Ignore
+    # the drone itself and the plane so neither the rotors nor the ground can
+    # be classified as an obstacle while the vehicle pitches or rolls.
+    object_ids = segmentation & ((1 << 24) - 1)
+    depth_buffer[(object_ids == drone) | (object_ids == ground)] = 1.0
+    # PyBullet returns a normalized OpenGL depth buffer.  Convert it to the
+    # real distance along the camera viewing ray.
+    return CAMERA_FAR * CAMERA_NEAR / (
+        CAMERA_FAR - (CAMERA_FAR - CAMERA_NEAR) * depth_buffer
+    )
+
+
+def camera_avoidance_velocity(depth_meters, position, rotation):
+    """Turn the forward depth image into a world-frame velocity bias.
+
+    The controller still owns the flight path.  This returns zero until an
+    obstacle enters the central part of the camera image, then brakes and
+    sidesteps toward the visually clearer side.
+    """
+    # Close to the floor the depth image is mostly the ground plane, not an
+    # obstacle.  Let the normal take-off/landing controller operate there.
+    if position[2] < 0.70:
+        return np.zeros(3), float('inf')
+
+    h, w = depth_meters.shape
+    # Ignore the very top/bottom of the image.  The lower edge can see ground
+    # during a modest pitch angle; the upper edge is normally open sky.
+    view = depth_meters[int(0.25 * h):int(0.65 * h), int(0.05 * w):int(0.95 * w)]
+    left = view[:, :view.shape[1] // 2]
+    right = view[:, view.shape[1] // 2:]
+
+    # A low percentile notices a real obstacle without overreacting to one
+    # bad depth pixel.  Smaller values mean an object is closer.
+    front_distance = float(np.percentile(view, 5))
+    left_distance = float(np.percentile(left, 5))
+    right_distance = float(np.percentile(right, 5))
+    if front_distance >= AVOID_START_DISTANCE:
+        return np.zeros(3), front_distance
+
+    strength = np.clip(
+        (AVOID_START_DISTANCE - front_distance)
+        / (AVOID_START_DISTANCE - AVOID_STOP_DISTANCE),
+        0.0,
+        1.0,
+    )
+
+    # In this body convention, image-left points approximately toward body +Y
+    # and image-right toward body -Y.  Head toward the side with more clearance.
+    side = 1.0 if left_distance > right_distance else -1.0
+    avoidance_body = np.array([
+        -AVOID_MAX_SPEED * strength,         # brake/back away from the object
+        side * AVOID_MAX_SPEED * strength,   # pass on the clearer side
+        0.0,
+    ])
+    return rotation @ avoidance_body, front_distance
+
 class Weather:
     def __init__(self, seed):
         self.rng = np.random.default_rng(seed)
         self.gust = np.zeros(3)
         self.target_gust = np.zeros(3)
         self.next_gust = 0.0
+        self.turbulence = np.zeros(3)
+        self.target_turbulence = np.zeros(3)
+        self.next_turbulence = 0.0
+        self.rain_load = RAIN_LOAD
+        self.next_rain_update = 0.0
 
     def force(self, sim_time, velocity):
         if sim_time >= self.next_gust:
             self.target_gust = self.rng.uniform(-GUST_RANGE, GUST_RANGE)
             self.next_gust = sim_time + 2.0
         self.gust += (1.0 - math.exp(-DT / 0.4)) * (self.target_gust - self.gust)
-        air_relative_velocity = MEAN_WIND + self.gust - velocity
+
+        # Faster, smaller turbulence changes the local air velocity.
+        if sim_time >= self.next_turbulence:
+            self.target_turbulence = self.rng.uniform(
+                -TURBULENCE_RANGE, TURBULENCE_RANGE
+            )
+            self.next_turbulence = sim_time + TURBULENCE_INTERVAL
+        turbulence_alpha = 1.0 - math.exp(-DT / 0.07)
+        self.turbulence += turbulence_alpha * (
+            self.target_turbulence - self.turbulence
+        )
+
+        air_relative_velocity = MEAN_WIND + self.gust + self.turbulence - velocity
         # F = 1/2 rho CdA |v_rel| v_rel, with assumed rho=1.225 and CdA=0.08.
         wind_force = 0.5 * 1.225 * 0.08 * np.linalg.norm(air_relative_velocity) * air_relative_velocity
-        rain_force = np.array([0., 0., -RAIN_LOAD])
+
+        # Rain is represented by a slowly varying downward load plus a tiny
+        # lateral component from drops carried by the wind.
+        if sim_time >= self.next_rain_update:
+            self.rain_load = max(
+                0.0,
+                RAIN_LOAD + self.rng.uniform(-RAIN_VARIATION, RAIN_VARIATION),
+            )
+            self.next_rain_update = sim_time + 0.25
+        rain_force = np.array([
+            RAIN_LATERAL_FORCE * math.tanh(air_relative_velocity[0]),
+            RAIN_LATERAL_FORCE * math.tanh(air_relative_velocity[1]),
+            -self.rain_load,
+        ])
         return wind_force + rain_force
 
 
@@ -211,6 +364,27 @@ def create_drone():
     return drone
 
 
+def add_obstacle(position, half_extents):
+    """Create one fixed box that the drone can see and collide with."""
+    collision = p.createCollisionShape(p.GEOM_BOX, halfExtents=half_extents)
+    visual = p.createVisualShape(
+        p.GEOM_BOX,
+        halfExtents=half_extents,
+        rgbaColor=[0.88, 0.16, 0.10, 1.0],
+    )
+    return p.createMultiBody(
+        baseMass=0.0,  # Static world object.
+        baseCollisionShapeIndex=collision,
+        baseVisualShapeIndex=visual,
+        basePosition=position,
+    )
+
+
+def create_obstacle_course():
+    return [add_obstacle(position, half_extents)
+            for position, half_extents in OBSTACLE_LAYOUT]
+
+
 def apply_rotor_thrusts(drone, position, rotation, thrusts):
     up = rotation[:, 2]  # THIRD COLUMN = body +Z expressed in world coordinates.
     for i, thrust in enumerate(thrusts):
@@ -230,6 +404,8 @@ def main():
     parser.add_argument('--headless', action='store_true', help='Run without a window or pacing.')
     parser.add_argument('--seconds', type=float, default=0, help='Simulated duration; 0 runs until closed.')
     parser.add_argument('--no-weather', action='store_true', help='Disable built-in wind and rain load.')
+    parser.add_argument('--no-obstacles', action='store_true',
+                        help='Disable the obstacle course and camera avoidance.')
     parser.add_argument('--seed', type=int, default=7, help='Seed for reproducible random gusts.')
     parser.add_argument('--csv', help='Optional telemetry CSV path.')
     args = parser.parse_args()
@@ -247,8 +423,10 @@ def main():
     p.setGravity(*GRAVITY)
     p.setTimeStep(DT)
     p.setRealTimeSimulation(0)
-    p.loadURDF('plane.urdf')
+    ground = p.loadURDF('plane.urdf')
     drone = create_drone()
+    obstacles_enabled = not args.no_obstacles
+    obstacle_ids = create_obstacle_course() if obstacles_enabled else []
     if not args.headless:
         if hasattr(p, 'COV_ENABLE_MOUSE_PICKING'):
             p.configureDebugVisualizer(p.COV_ENABLE_MOUSE_PICKING, 0)
@@ -262,6 +440,8 @@ def main():
     commands = np.full(4, MASS * 9.81 / 4)
     actual_thrusts = commands.copy()
     expected_delta_velocity = np.zeros(3)
+    avoidance_velocity = np.zeros(3)
+    camera_obstacle_distance = float('inf')
     waypoint_index, dwell, route_complete = 0, 0.0, False
     push_until = -1.0
     control_dt = DT * CONTROL_EVERY
@@ -276,8 +456,12 @@ def main():
         writer.writerow(['time_s', 'waypoint', 'x', 'y', 'z', 'vx', 'vy', 'vz',
                          'ax', 'ay', 'az', 'roll_rad', 'pitch_rad', 'yaw_rad',
                          'T0_N', 'T1_N', 'T2_N', 'T3_N', 'weather_Fx', 'weather_Fy',
-                         'weather_Fz', 'estimated_Fx', 'estimated_Fy', 'estimated_Fz'])
+                         'weather_Fz', 'estimated_Fx', 'estimated_Fy', 'estimated_Fz',
+                         'camera_obstacle_m', 'avoid_vx', 'avoid_vy', 'avoid_vz'])
     print('Four-rotor simulation. P: sideways push. W: toggle weather. Ctrl+C: exit.')
+    if obstacles_enabled:
+        print(f'Camera avoidance enabled for {len(obstacle_ids)} obstacles. '
+              'Use --no-obstacles for the baseline route.')
 
     try:
         while p.isConnected(client):
@@ -286,9 +470,17 @@ def main():
                 break
             pos_tuple, quaternion = p.getBasePositionAndOrientation(drone)
             vel_tuple, omega_tuple = p.getBaseVelocity(drone)
+
             position, velocity = np.array(pos_tuple), np.array(vel_tuple)
             omega = np.array(omega_tuple)
             rotation = np.array(p.getMatrixFromQuaternion(quaternion)).reshape(3, 3)
+
+            # Render the actual body-mounted camera at 12 Hz.  Only its depth
+            # image reaches this routine; it does not get obstacle coordinates.
+            if obstacles_enabled and step % CAMERA_EVERY == 0:
+                depth_meters = drone_camera_depth(drone, ground, position, rotation)
+                avoidance_velocity, camera_obstacle_distance = camera_avoidance_velocity(
+                    depth_meters, position, rotation)
 
             if step % CONTROL_EVERY == 0:
                 target = WAYPOINTS[waypoint_index]
@@ -305,7 +497,8 @@ def main():
                             route_complete = True
                             print('Route complete; continuing to hold the final position.')
                 commands = controller.update(WAYPOINTS[waypoint_index], position, velocity,
-                    rotation, omega, expected_delta_velocity / control_dt, control_dt)
+                    rotation, omega, expected_delta_velocity / control_dt, control_dt,
+                    avoidance_velocity)
                 expected_delta_velocity[:] = 0.0
 
             # Actual motor response takes time; it does not jump to the command.
@@ -337,11 +530,14 @@ def main():
                 if writer:
                     writer.writerow([sim_time, waypoint_index + 1, *position, *velocity,
                         *controller.acceleration, *euler, *actual_thrusts, *weather_force,
-                        *(MASS * controller.disturbance_acceleration)])
+                        *(MASS * controller.disturbance_acceleration),
+                        camera_obstacle_distance, *avoidance_velocity])
                 if not args.headless:
                     state = 'HOLD' if route_complete else f'Waypoint {waypoint_index + 1}/{len(WAYPOINTS)}'
+                    obstacle_text = ('clear' if not obstacles_enabled
+                                     else f'{camera_obstacle_distance:.1f} m')
                     label = (f'{state} | weather {"ON" if weather_enabled else "OFF"} | tilt {tilt:.1f} deg\n'
-                             f'Thrust N: {actual_thrusts.round(2)} | P: push | W: weather')
+                             f'camera obstacle: {obstacle_text} | P: push | W: weather')
                     status_id = p.addUserDebugText(label, [0, 0, 2.8], [0.1, 0.1, 0.1],
                                                    textSize=1.0, replaceItemUniqueId=status_id)
 
@@ -357,6 +553,8 @@ def main():
                 remaining = start_wall_time + step * DT - time.perf_counter()
                 if remaining > 0:
                     time.sleep(remaining)
+            if not args.headless and step % 40 == 0:
+                follow_drone_camera(position, quaternion)
     except KeyboardInterrupt:
         pass
     finally:
