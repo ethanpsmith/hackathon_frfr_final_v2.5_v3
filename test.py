@@ -14,7 +14,7 @@ p.setGravity(0, 0, -9.81)
 
 
 plane_id = p.loadURDF("plane.urdf")
-stl_path="/Users/ethansmith/img63/quad_delivery_vtol.step"
+stl_path="/Users/ethansmith/img63/quad_delivery_vtol.stl"
 
 # Physics shape: simple box around the drone
 collision_shape = p.createCollisionShape(
