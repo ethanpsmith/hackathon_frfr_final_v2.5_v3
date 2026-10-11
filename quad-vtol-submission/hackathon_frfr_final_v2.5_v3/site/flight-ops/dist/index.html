@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f6f8f5">
+  <meta name="description" content="SWARM Columbia route tracking with ArduCopter SITL telemetry and live flight graphs.">
+  <title>SWARM — Columbia SITL flight tracking</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./flightpath.css">
+  <link rel="stylesheet" href="./dashboard.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+  <main class="app">
+    <section class="side" aria-label="SITL route details">
+      <header class="brandrow"><div class="brand"><span class="brandmark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="3" fill="currentColor"/><circle cx="7" cy="7" r="3.4" stroke="currentColor" stroke-width="2.3"/><circle cx="25" cy="7" r="3.4" stroke="currentColor" stroke-width="2.3"/><circle cx="7" cy="25" r="3.4" stroke="currentColor" stroke-width="2.3"/><circle cx="25" cy="25" r="3.4" stroke="currentColor" stroke-width="2.3"/><path d="M9.5 9.5 14 14m8.5-4.5L18 14M9.5 22.5 14 18m8.5 4.5L18 18" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg></span> SWARM</div><span class="demo-chip" id="connection-chip">REPLAY</span></header>
+      <div class="sidebody">
+        <p class="eyebrow">Columbia, South Carolina · ArduCopter SITL</p>
+        <h1>Follow the flight<br>as it happens.</h1>
+        <p class="sub">Original Flightpath routes at their full geographic distances, flown by ArduCopter in simulation. Each route lands at its target, then climbs for the return.</p>
+
+        <form id="track-form"><label class="inputlabel" for="tracking">Tracking number</label><div class="searchbox"><input id="tracking" autocomplete="off" spellcheck="false" value="UAV-COLA-2047" aria-describedby="tracking-help tracking-error"><button class="primary" type="submit">Track ↗</button></div><p class="helper" id="tracking-help">Select a Columbia route below.</p><p class="error" id="tracking-error" role="alert">Enter one of the three tracking numbers below.</p></form>
+        <div class="demo-list" id="route-options" aria-label="Columbia SITL routes"><span class="overline">Choose a route</span></div>
+        <hr class="divider">
+
+        <div class="statusline"><span class="overline">Mission status</span><span class="live"><span class="dot" id="flight-dot"></span><span id="flight-status">RECORDED REPLAY</span></span></div>
+        <div class="eta"><strong id="route-distance">—</strong></div><div class="eta-caption" id="distance-caption">Outbound distance · WGS84 route</div>
+        <div class="progress" role="progressbar" aria-label="Round-trip mission progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressbar"><div id="progressfill"></div></div><div class="progressmeta"><span>Pickup</span><strong id="progresspct">Route preview</strong><span>Home return</span></div>
+        <div class="route"><div class="stop"><span class="stopicon" aria-hidden="true">▣</span><div><small>Launch and return</small><strong id="store-name">—</strong><em id="store-address">—</em></div></div><div class="stop"><span class="stopicon destination" aria-hidden="true">⌖</span><div><small>Route destination</small><strong id="destination-name">—</strong><em id="destination-address">—</em></div></div></div>
+
+        <div class="controlbox"><h2>Run the selected route in SITL</h2><div class="flight-settings"><label>Altitude above home<input id="route-altitude" type="number" min="20" max="80" value="43" step="1"><small>20–80 m</small></label><label>Speed<input id="route-speed" type="number" min="0.5" max="5" value="5" step="0.1"><small>0.5–5 m/s</small></label></div><button class="primary start-flight" id="start-flight" type="button">Start SITL route ↗</button><p class="helper" id="launch-feedback" role="status">Connect the simulator to start. Target landing is simulated; payload release remains disabled.</p></div>
+        <div class="bridge-box"><h2>Local simulator</h2><p>From the Hackathon directory run <code>bash flightpath-vscode/start.sh</code>. Paste the access code printed in its terminal.</p><label class="inputlabel" for="bridge-token">Bridge access code</label><div class="searchbox"><input id="bridge-token" type="password" autocomplete="off" placeholder="Paste code"><button class="primary" id="connect-button" type="button">Connect</button></div><p class="helper" id="bridge-message" role="status">Replay available without a bridge.</p></div>
+      </div>
+      <footer class="sidefoot">SITL uses stock 3 kg / 350 mm / 3S quad physics. The 650 mm / 6S CAD airframe is a concept visualization. Columbia locations are inherited, unsurveyed route inputs; terrain and buildings are absent. No physical vehicle or payload actuator is connected.</footer>
+    </section>
+
+    <section class="right" aria-label="Flight map and telemetry">
+      <div class="mapwrap"><div id="map" role="img" aria-label="Columbia map with selected route and SITL GPS track"></div><div class="maptop"><div class="locationpill"><span class="location-symbol" aria-hidden="true">⌖</span><div>Columbia, SC<small id="map-route-name">SITL route</small></div></div><div class="mapbadge" id="mapbadge">● &nbsp; RECORDED SITL</div></div><div class="mapbottom"><strong>●</strong> <span id="uav-id">UAV-07</span> &nbsp;·&nbsp; Route <span id="package-id">UAV-COLA-2047</span></div><div class="telemetry"><div class="top"><h2>Flight telemetry</h2><span class="signal" id="gps-status">GPS —</span></div><div class="metrics"><div><small>Latitude</small><strong id="lat">—</strong></div><div><small>Longitude</small><strong id="lng">—</strong></div><div><small>Altitude · SITL</small><strong id="alt">—</strong></div><div><small>Groundspeed · SITL</small><strong id="velocity">—</strong></div></div><footer id="updated">Waiting for telemetry</footer></div></div>
+
+      <div class="below"><section class="graph-section" aria-label="Live flight graphs"><div class="panel-heading"><div><p class="eyebrow">Flight controller telemetry</p><h2>Live output graphs</h2></div><span id="graph-source">RECORDED SITL</span></div><div class="graph-grid" id="graphs"></div></section><div class="info-column"><section class="health-panel" aria-label="Live flight health diagnostics"><div class="panel-heading"><div><p class="eyebrow">Flight controller status</p><h2>Health diagnostics</h2></div><span id="health-source">RECORDED SITL</span></div><div class="health-grid"><div><small>Flight mode</small><strong id="health-mode">—</strong></div><div><small>Battery current</small><strong id="health-current">—</strong></div><div><small>Battery voltage</small><strong id="health-voltage">—</strong></div><div><small>Heading</small><strong id="health-heading">—</strong></div><div><small>GPS fix / satellites</small><strong id="health-gps">—</strong></div><div><small>Estimator / RC</small><strong id="health-systems">—</strong></div><div><small>Armed / landed</small><strong id="health-aircraft">—</strong></div><div><small>Mission item</small><strong id="health-mission">—</strong></div><div><small>Telemetry age</small><strong id="health-age">—</strong></div></div><p class="health-note" id="health-note">Values come from simulated flight-controller messages.</p></section><section class="airframe"><div class="panel-heading"><div><p class="eyebrow">Concept airframe</p><h2>Quad delivery VTOL</h2></div><span>STEP-DERIVED MODEL</span></div><div id="model-view" role="img" aria-label="Interactive 3D model of the concept drone"></div><p>Drag to rotate · scroll to zoom · 650 mm diagonal</p></section></div></div>
+    </section>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

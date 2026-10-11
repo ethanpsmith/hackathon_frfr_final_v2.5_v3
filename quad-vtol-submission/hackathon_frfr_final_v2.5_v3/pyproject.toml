@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quad-delivery-sitl"
+version = "0.1.0"
+description = "Simulation-only delivery mission coordinator for ArduCopter"
+requires-python = ">=3.11,<3.14"
+dependencies = ["pymavlink==2.4.49", "geographiclib==2.1"]
+
+[project.optional-dependencies]
+vision = ["opencv-python-headless==4.12.0.88", "numpy==2.2.6"]
+
+[tool.setuptools.packages.find]
+where = ["flight-software"]
+
+[tool.pytest.ini_options]
+pythonpath = ["flight-software", "."]
+testpaths = ["tests"]
+markers = ["sitl: requires locally built pinned ArduCopter"]
+addopts = "-ra"

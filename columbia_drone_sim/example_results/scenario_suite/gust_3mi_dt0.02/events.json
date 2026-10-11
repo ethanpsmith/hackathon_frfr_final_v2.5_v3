@@ -1,0 +1,92 @@
+[
+  {
+    "t_s": 0.0,
+    "state": "LOADING",
+    "level": "INFO",
+    "message": "Simulation only: actual flight authorization NOT VERIFIED."
+  },
+  {
+    "t_s": 4.0,
+    "state": "CLIMB",
+    "level": "STATE",
+    "message": "Order confirmed; checks passed for virtual mission; climb above hub."
+  },
+  {
+    "t_s": 33.74,
+    "state": "OUTBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 150.0,
+    "state": "OUTBOUND",
+    "level": "DISTURBANCE",
+    "message": "Crosswind step and turbulence: track error drives tilt and thrust correction."
+  },
+  {
+    "t_s": 195.0,
+    "state": "OUTBOUND",
+    "level": "DISTURBANCE",
+    "message": "Wind disturbance removed."
+  },
+  {
+    "t_s": 407.88,
+    "state": "APPROACH_A",
+    "level": "STATE",
+    "message": "Descending approach: reducing altitude and braking toward the pad."
+  },
+  {
+    "t_s": 459.1,
+    "state": "DESCEND_A",
+    "level": "STATE",
+    "message": "Pad alignment confirmed; slow vertical descent. Playback switches to 1x."
+  },
+  {
+    "t_s": 487.66,
+    "state": "SHUTDOWN_A",
+    "level": "STATE",
+    "message": "Touchdown confirmed; stop rotors and hold before package release."
+  },
+  {
+    "t_s": 497.68,
+    "state": "RELEASE",
+    "level": "STATE",
+    "message": "Motors stopped and weight on ground: unlocking landed cargo. No cable."
+  },
+  {
+    "t_s": 500.7,
+    "state": "DEPART_A",
+    "level": "STATE",
+    "message": "Package released; confirm separation and clear departure area."
+  },
+  {
+    "t_s": 506.72,
+    "state": "RETURN_CLIMB",
+    "level": "STATE",
+    "message": "Separation verified; lift off with reduced mass and return to hub."
+  },
+  {
+    "t_s": 536.48,
+    "state": "INBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 938.6,
+    "state": "APPROACH_HOME",
+    "level": "STATE",
+    "message": "Descending approach: reducing altitude and braking toward the pad."
+  },
+  {
+    "t_s": 989.32,
+    "state": "LAND_HOME",
+    "level": "STATE",
+    "message": "Pad alignment confirmed; slow vertical descent. Playback switches to 1x."
+  },
+  {
+    "t_s": 1016.32,
+    "state": "COMPLETE",
+    "level": "STATE",
+    "message": "Returned to hub. Delivery completed."
+  }
+]

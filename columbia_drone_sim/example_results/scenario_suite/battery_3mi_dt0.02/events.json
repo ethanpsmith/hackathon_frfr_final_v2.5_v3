@@ -1,0 +1,38 @@
+[
+  {
+    "t_s": 0.0,
+    "state": "LOADING",
+    "level": "INFO",
+    "message": "Simulation only: actual flight authorization NOT VERIFIED."
+  },
+  {
+    "t_s": 4.0,
+    "state": "CLIMB",
+    "level": "STATE",
+    "message": "Order confirmed; checks passed for virtual mission; climb above hub."
+  },
+  {
+    "t_s": 33.74,
+    "state": "OUTBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 150.0,
+    "state": "OUTBOUND",
+    "level": "DISTURBANCE",
+    "message": "Injected battery-state fault: remaining charge set to 20%; not normal aging."
+  },
+  {
+    "t_s": 150.04,
+    "state": "EMERGENCY_DESCEND",
+    "level": "STATE",
+    "message": "Critical battery voltage/charge/power. Emergency surface is an assumed clear virtual area, not a surveyed real landing site."
+  },
+  {
+    "t_s": 158.98,
+    "state": "CRASHED",
+    "level": "STATE",
+    "message": "Unsafe impact / loss of control. Delivery failed; no safe recovery demonstrated."
+  }
+]

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101722">
+  <meta name="description" content="SWARM: three simulated UAV delivery tracking demos in Columbia, South Carolina.">
+  <title>SWARM — Columbia delivery tracking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="app">
+    <section class="side" aria-label="Delivery details">
+      <header class="brandrow"><div class="brand"><span class="brandmark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="3" fill="currentColor"/><circle cx="7" cy="7" r="3.4" stroke="currentColor" stroke-width="2.3"/><circle cx="25" cy="7" r="3.4" stroke="currentColor" stroke-width="2.3"/><circle cx="7" cy="25" r="3.4" stroke="currentColor" stroke-width="2.3"/><circle cx="25" cy="25" r="3.4" stroke="currentColor" stroke-width="2.3"/><path d="M9.5 9.5 14 14m8.5-4.5L18 14M9.5 22.5 14 18m8.5 4.5L18 18" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg></span> SWARM</div><span class="demo-chip">DEMO MODE</span></header>
+      <div class="sidebody">
+        <p class="eyebrow">Your delivery, from above</p>
+        <h1>Track your package<br>in real time.</h1>
+        <p class="sub">Follow three sample UAV deliveries across downtown Columbia, South Carolina.</p>
+        <form id="track-form"><label class="inputlabel" for="tracking">Tracking number</label><div class="searchbox"><input id="tracking" autocomplete="off" spellcheck="false" value="UAV-COLA-2047" aria-describedby="tracking-help tracking-error"><button class="primary" type="submit">Track ↗</button></div><p class="helper" id="tracking-help">Choose a demo below or enter its tracking number.</p><p class="error" id="tracking-error" role="alert">Enter one of the three demo tracking numbers below.</p></form>
+        <div class="demo-list" aria-label="Sample deliveries"><span class="overline">Choose a demo delivery</span><button type="button" class="demo-option selected" data-tracking="UAV-COLA-2047" aria-pressed="true"><span class="demo-num">01</span><span><strong>UAV-COLA-2047</strong><small>Publix → Finlay Park</small></span><span class="demo-arrow">↗</span></button><button type="button" class="demo-option" data-tracking="UAV-COLA-3186" aria-pressed="false"><span class="demo-num">02</span><span><strong>UAV-COLA-3186</strong><small>Mast General → Riverfront Park</small></span><span class="demo-arrow">↗</span></button><button type="button" class="demo-option" data-tracking="UAV-COLA-5729" aria-pressed="false"><span class="demo-num">03</span><span><strong>UAV-COLA-5729</strong><small>Publix → Museum of Art</small></span><span class="demo-arrow">↗</span></button></div>
+        <hr class="divider">
+        <div class="statusline"><span class="overline">Estimated arrival</span><span class="live"><span class="dot"></span><span id="flight-status">PREPARING ORDER</span></span></div>
+        <div class="eta"><strong id="eta">1 min 32 sec</strong></div><div class="eta-caption" id="eta-caption">Arriving at approximately —</div>
+        <div class="progress" role="progressbar" aria-label="Delivery progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressbar"><div id="progressfill"></div></div><div class="progressmeta"><span>Store pickup</span><strong id="progresspct">22% of route</strong><span>Drop-off</span></div>
+        <div class="route"><div class="stop"><span class="stopicon" aria-hidden="true">▣</span><div><small>Picked up from</small><strong id="store-name">Publix · Gervais Place</strong><em id="store-address">501 Gervais St · Columbia, SC</em></div></div><div class="stop"><span class="stopicon destination" aria-hidden="true">⌖</span><div><small>Delivery point</small><strong id="destination-name">Finlay Park</strong><em id="destination-address">930 Laurel St · Columbia, SC</em></div></div></div>
+        <div class="controlbox"><h2>Presentation controls</h2><div class="buttons"><button class="secondary" id="pause" type="button">❚❚ Pause flight</button><button class="secondary" id="replay" type="button">↺ Replay route</button><button class="secondary" id="speed" type="button" aria-label="Playback speed">1× speed</button></div></div>
+      </div>
+      <footer class="sidefoot">Simulated flight and GPS positions for a presentation. Route and ETA are illustrative; no live UAV is connected. Map data © OpenStreetMap contributors.</footer>
+    </section>
+    <section class="mapwrap" aria-label="Map of simulated delivery in Columbia"><div id="map" role="img" aria-label="Street map of the route from Publix Gervais Place to Finlay Park"></div><div class="fallback" id="fallback">Map tiles could not load. An internet connection is needed for the Columbia street map.</div><div class="maptop"><div class="locationpill"><span style="color:#359b66;font-size:19px" aria-hidden="true">⌖</span><div>Columbia, SC<small>Downtown delivery route</small></div></div><div class="mapbadge" id="mapbadge">● &nbsp; PREPARING AT STORE</div></div><div class="mapbottom"><strong>●</strong> <span id="uav-id">UAV-07</span> &nbsp;·&nbsp; Package <span id="package-id">UAV-COLA-2047</span></div><div class="mapattribution">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div><div class="telemetry"><div class="top"><h2>Flight telemetry</h2><span class="signal">▂▄▆ GPS LOCK</span></div><div class="metrics"><div><small>Latitude</small><strong id="lat">—</strong></div><div><small>Longitude</small><strong id="lng">—</strong></div><div><small>Altitude · simulated</small><strong id="alt">—</strong></div><div><small>Ground speed · simulated</small><strong id="velocity">—</strong></div></div><footer id="updated">Position updated just now</footer></div></section>
+  </main>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+[
+  {
+    "t_s": 0.0,
+    "state": "LOADING",
+    "level": "INFO",
+    "message": "Simulation only: actual flight authorization NOT VERIFIED."
+  },
+  {
+    "t_s": 4.0,
+    "state": "CLIMB",
+    "level": "STATE",
+    "message": "Order confirmed; checks passed for virtual mission; climb above hub."
+  },
+  {
+    "t_s": 33.74,
+    "state": "OUTBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 150.0,
+    "state": "OUTBOUND",
+    "level": "DISTURBANCE",
+    "message": "Site A pad occupied: approach clearance will be denied."
+  },
+  {
+    "t_s": 408.1,
+    "state": "APPROACH_A",
+    "level": "STATE",
+    "message": "Descending approach: reducing altitude and braking toward the pad."
+  },
+  {
+    "t_s": 459.32,
+    "state": "RETURN_CLIMB",
+    "level": "STATE",
+    "message": "Landing pad occupied; delivery denied Package retained unless already delivered; return to hub."
+  },
+  {
+    "t_s": 484.82,
+    "state": "INBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 896.02,
+    "state": "APPROACH_HOME",
+    "level": "STATE",
+    "message": "Descending approach: reducing altitude and braking toward the pad."
+  },
+  {
+    "t_s": 946.44,
+    "state": "LAND_HOME",
+    "level": "STATE",
+    "message": "Pad alignment confirmed; slow vertical descent. Playback switches to 1x."
+  },
+  {
+    "t_s": 973.62,
+    "state": "COMPLETE",
+    "level": "STATE",
+    "message": "Returned to hub. Mission aborted; package retained."
+  }
+]

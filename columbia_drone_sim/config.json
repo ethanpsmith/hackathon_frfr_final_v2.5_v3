@@ -1,0 +1,52 @@
+{
+  "notice": "ILLUSTRATIVE, UNVALIDATED AIRCRAFT. SIMULATION ONLY. Not flight-control software or airspace authorization.",
+  "mesh": {"path": "assets/quad_delivery_vtol.stl", "units_to_m": 0.001, "rotation_deg_xyz": [0, 0, 0], "body_origin_stl_units": [0, 0, 0], "display_vertex_grid_m": 0.013},
+  "aircraft": {
+    "dry_mass_including_battery_kg": 5.8, "payload_kg": 1.81436948,
+    "inertia_diagonal_kg_m2": [0.30, 0.30, 0.52], "payload_offset_body_m": [0, 0, -0.18],
+    "motor_arm_m": 0.40, "rotor_radius_m": 0.165, "max_thrust_per_motor_N": 38.0,
+    "yaw_torque_per_thrust_m": 0.02, "motor_time_constant_s": 0.08,
+    "drag_area_body_m2": [0.12, 0.12, 0.18], "angular_damping_Nm_per_rad_s": [0.12, 0.12, 0.08],
+    "propulsive_efficiency": 0.65, "rotor_profile_power_W": 60, "avionics_power_W": 25,
+    "battery_cells": 6, "battery_capacity_Ah": 30, "battery_mass_included_in_dry_mass_kg": 3.4, "battery_internal_resistance_ohm": 0.035,
+    "battery_initial_soc": 1.0, "battery_state_of_health": 0.95, "battery_cutoff_V": 19.2,
+    "battery_thermal_capacity_J_K": 2300, "battery_cooling_W_K": 6,
+    "ground_clearance_body_origin_m": 0.35
+  },
+  "mission": {
+    "warehouse_lat_lon": [34.0007, -81.0348], "site_a_offset_east_north_m": [4828.032, 0],
+    "location_note": "Columbia geographic reference ONLY; virtual flat-world route, not a selected warehouse, surveyed pad, mapped terrain, or approved airspace.",
+    "cruise_altitude_agl_m": 60, "approach_altitude_agl_m": 8,
+    "cruise_groundspeed_m_s": 12, "max_airspeed_m_s": 18, "climb_m_s": 2,
+    "descent_m_s": 1, "final_descent_m_s": 0.3, "max_tilt_deg": 25,
+    "landing_dwell_s": 10, "release_confirmation_s": 6,
+    "reserve_fraction": 0.30, "geofence_margin_m": 150,
+    "simulation_timeout_s": 2400
+  },
+  "weather": {
+    "mode": "climate", "month": 10, "station": "KCAE", "latitude": 34.0007, "longitude": -81.0348,
+    "user_agent": "ColumbiaDroneSim/1.0 (educational simulation; set your contact email here)",
+    "wind_from_deg": 240, "gust_sigma_m_s": 0.40, "turbulence_correlation_s": 2.5,
+    "wind_shear_exponent": 0.16, "reference_height_m": 10,
+    "surface_elevation_m": 70, "surface_pressure_Pa": 100490,
+    "visibility_m": 16093.44, "cloud_base_agl_m": 1500, "horizontal_cloud_clearance_m": 2000,
+    "rain_mm_hr": 0, "daylight": true, "max_observation_age_minutes": 120
+  },
+  "limits": {
+    "max_altitude_agl_m": 121.92, "max_groundspeed_m_s": 44.704,
+    "min_visibility_m": 4828.032, "min_vertical_cloud_clearance_m": 152.4,
+    "min_horizontal_cloud_clearance_m": 609.6,
+    "max_mean_wind_at_aircraft_m_s": 8, "max_instant_wind_m_s": 12,
+    "min_temperature_C": 5, "max_temperature_C": 38, "max_battery_temperature_C": 55,
+    "max_rain_mm_hr": 0, "max_payload_kg": 1.81436948
+  },
+  "regulatory_review": {
+    "mode": "simulation_only", "planned_real_operation": "BVLOS commercial delivery",
+    "operator_approval_documented": false, "aircraft_approval_documented": false,
+    "airspace_and_TFRs_verified": false, "remote_id_verified": false,
+    "property_and_landing_permissions_verified": false, "people_and_vehicles_risk_reviewed": false,
+    "VLOS_or_specific_BVLOS_authority_verified": false, "local_rules_and_environment_reviewed": false,
+    "hazmat_excluded": true, "maintenance_and_emergency_plan_verified": false
+  },
+  "simulation": {"dt_s": 0.02, "random_seed": 19, "log_interval_s": 0.2, "playback_speed": 16, "viewer_fps": 10}
+}

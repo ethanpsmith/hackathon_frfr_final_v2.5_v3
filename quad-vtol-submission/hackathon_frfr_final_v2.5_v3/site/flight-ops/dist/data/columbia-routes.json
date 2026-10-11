@@ -1,0 +1,255 @@
+{
+  "UAV-COLA-2047": {
+    "vehicle": "UAV-07",
+    "store": "Publix \u00b7 Gervais Place",
+    "storeAddress": "501 Gervais St \u00b7 Columbia, SC",
+    "destination": "Finlay Park",
+    "destinationAddress": "930 Laurel St \u00b7 Columbia, SC",
+    "path": [
+      [
+        33.998339,
+        -81.044467
+      ],
+      [
+        33.99905,
+        -81.04415
+      ],
+      [
+        34.00005,
+        -81.0438
+      ],
+      [
+        34.00128,
+        -81.04343
+      ],
+      [
+        34.0024,
+        -81.04324
+      ],
+      [
+        34.00338,
+        -81.04292
+      ],
+      [
+        34.00455,
+        -81.04248
+      ],
+      [
+        34.00548,
+        -81.04212
+      ],
+      [
+        34.006317,
+        -81.04168
+      ]
+    ],
+    "metrics": {
+      "path": [
+        [
+          33.998339,
+          -81.044467
+        ],
+        [
+          33.99905,
+          -81.04415
+        ],
+        [
+          34.00005,
+          -81.0438
+        ],
+        [
+          34.00128,
+          -81.04343
+        ],
+        [
+          34.0024,
+          -81.04324
+        ],
+        [
+          34.00338,
+          -81.04292
+        ],
+        [
+          34.00455,
+          -81.04248
+        ],
+        [
+          34.00548,
+          -81.04212
+        ],
+        [
+          34.006317,
+          -81.04168
+        ]
+      ],
+      "altitude": 43.0,
+      "speed": 5.0,
+      "outbound_m": 924.1693859044306,
+      "roundtrip_m": 1848.338771808861,
+      "fence_radius_m": 1050,
+      "loaded_roundtrip_estimate_wh": 130.2711732380538,
+      "home_msl_assumption_m": 100,
+      "hardware": false,
+      "coordinate_source": "Flightpath presentation inputs or operator coordinates; unsurveyed",
+      "model": "stock ArduPilot X quad on flat ground; no city obstacles or terrain"
+    }
+  },
+  "UAV-COLA-3186": {
+    "vehicle": "UAV-12",
+    "store": "Mast General Store",
+    "storeAddress": "1601 Main St \u00b7 Columbia, SC",
+    "destination": "Riverfront Park",
+    "destinationAddress": "312 Laurel St \u00b7 Columbia, SC",
+    "path": [
+      [
+        34.00667,
+        -81.03611
+      ],
+      [
+        34.00655,
+        -81.038
+      ],
+      [
+        34.0062,
+        -81.04
+      ],
+      [
+        34.0055,
+        -81.042
+      ],
+      [
+        34.0048,
+        -81.044
+      ],
+      [
+        34.0042,
+        -81.046
+      ],
+      [
+        34.0039,
+        -81.048
+      ],
+      [
+        34.0037859,
+        -81.0512424
+      ]
+    ],
+    "metrics": {
+      "path": [
+        [
+          34.00667,
+          -81.03611
+        ],
+        [
+          34.00655,
+          -81.038
+        ],
+        [
+          34.0062,
+          -81.04
+        ],
+        [
+          34.0055,
+          -81.042
+        ],
+        [
+          34.0048,
+          -81.044
+        ],
+        [
+          34.0042,
+          -81.046
+        ],
+        [
+          34.0039,
+          -81.048
+        ],
+        [
+          34.0037859,
+          -81.0512424
+        ]
+      ],
+      "altitude": 43.0,
+      "speed": 5.0,
+      "outbound_m": 1448.6283993265704,
+      "roundtrip_m": 2897.256798653141,
+      "fence_radius_m": 1550,
+      "loaded_roundtrip_estimate_wh": 195.8285499158213,
+      "home_msl_assumption_m": 100,
+      "hardware": false,
+      "coordinate_source": "Flightpath presentation inputs or operator coordinates; unsurveyed",
+      "model": "stock ArduPilot X quad on flat ground; no city obstacles or terrain"
+    }
+  },
+  "UAV-COLA-5729": {
+    "vehicle": "UAV-23",
+    "store": "Publix \u00b7 Gervais Place",
+    "storeAddress": "501 Gervais St \u00b7 Columbia, SC",
+    "destination": "Columbia Museum of Art",
+    "destinationAddress": "1515 Main St \u00b7 Columbia, SC",
+    "path": [
+      [
+        33.998339,
+        -81.044467
+      ],
+      [
+        33.9996,
+        -81.0428
+      ],
+      [
+        34.001,
+        -81.0414
+      ],
+      [
+        34.0026,
+        -81.0399
+      ],
+      [
+        34.0041,
+        -81.0383
+      ],
+      [
+        34.005804,
+        -81.0364504
+      ]
+    ],
+    "metrics": {
+      "path": [
+        [
+          33.998339,
+          -81.044467
+        ],
+        [
+          33.9996,
+          -81.0428
+        ],
+        [
+          34.001,
+          -81.0414
+        ],
+        [
+          34.0026,
+          -81.0399
+        ],
+        [
+          34.0041,
+          -81.0383
+        ],
+        [
+          34.005804,
+          -81.0364504
+        ]
+      ],
+      "altitude": 43.0,
+      "speed": 5.0,
+      "outbound_m": 1112.6621547494124,
+      "roundtrip_m": 2225.3243094988247,
+      "fence_radius_m": 1250,
+      "loaded_roundtrip_estimate_wh": 153.83276934367652,
+      "home_msl_assumption_m": 100,
+      "hardware": false,
+      "coordinate_source": "Flightpath presentation inputs or operator coordinates; unsurveyed",
+      "model": "stock ArduPilot X quad on flat ground; no city obstacles or terrain"
+    }
+  }
+}

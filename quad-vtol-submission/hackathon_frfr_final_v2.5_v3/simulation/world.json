@@ -1,0 +1,10 @@
+{
+  "frame": "north-east-up metres; origin is launch pad; altitude is relative to launch ground",
+  "origin_gps": [-35.363261, 149.165230, 584.0],
+  "launch_pad": [0, 0, 0],
+  "delivery_pad": [20, 10, 0],
+  "fiducial_id": 7,
+  "request": {"destination": "delivery-pad", "waypoints": [[10, 0, 8], [20, 10, 8]], "speed": 3},
+  "obstacles": [{"north": 10, "east": -12, "radius": 2, "height": 8}],
+  "note": "Static exclusion map only. Obstacles are not collision geometry in the stock SITL dynamics. No collision avoidance claim."
+}

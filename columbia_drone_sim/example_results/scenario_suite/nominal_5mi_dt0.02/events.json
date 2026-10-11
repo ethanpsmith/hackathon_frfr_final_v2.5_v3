@@ -1,0 +1,14 @@
+[
+  {
+    "t_s": 0.0,
+    "state": "LOADING",
+    "level": "INFO",
+    "message": "Simulation only: actual flight authorization NOT VERIFIED."
+  },
+  {
+    "t_s": 0.0,
+    "state": "NO_GO",
+    "level": "STATE",
+    "message": "estimated round trip plus reserve exceeds available energy"
+  }
+]

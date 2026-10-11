@@ -1,0 +1,20 @@
+{
+  "retrieved_date": "2026-10-10",
+  "station": "Columbia Metropolitan Airport / KCAE",
+  "normal_period": "1991-2020",
+  "monthly_mean_temperature_F": [45.7,49.1,55.9,64.1,72.2,79.1,82.4,81.0,75.5,64.6,54.0,47.7],
+  "monthly_precipitation_inches": [3.49,3.39,3.57,2.83,3.49,4.97,5.35,4.65,3.91,3.13,2.76,3.70],
+  "annual_mean_temperature_F": 64.3,
+  "annual_precipitation_inches": 45.24,
+  "climate_source": "https://www.weather.gov/media/cae/New_Climate_Normals_public.pdf",
+  "climate_source_pages": [11,13],
+  "wind_reference": {
+    "period": "calendar year 2024; NOT a 30-year normal",
+    "mean_speed_mph": 5.8, "resultant_from_deg": 240,
+    "mean_relative_humidity_percent": 70, "mean_sky_cover_fraction": 0.51,
+    "highest_gust_mph": 67,
+    "source": "https://forecast.weather.gov/product.php?format=CI&glossary=1&issuedby=CAE&product=CLA&site=ARX&version=1",
+    "report_issued": "2025-01-01T08:50:00-05:00"
+  },
+  "interpretation": "Offline weather is a constructed reference scenario: selected-month temperature normal plus 2024 observed annual mean wind/RH. Direction is a scenario setting, not a prevailing-direction distribution. Rain totals are context only, never converted into continuous rainfall or probability. Turbulence, pressure, cloud distance, daylight and visibility are explicit assumptions. Mean wind is NOT a safe maximum and this is NOT today's weather. The annual-report URL is rolling; retain the stated report year."
+}

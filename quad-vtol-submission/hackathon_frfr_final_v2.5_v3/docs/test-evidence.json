@@ -1,0 +1,332 @@
+{
+  "date": "2026-10-10",
+  "platform": "macOS 26.3.1 arm64, Apple Clang 21.0.0, Python 3.11.13",
+  "command": "bash simulation/test.sh; additional geographic bridge checks (see commands)",
+  "tests": 152,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "seconds": 684.5469999999999,
+  "scenarios": [
+    {
+      "scenario": "blocked_pad",
+      "status": "PASS",
+      "final_state": "ABORTED",
+      "payload": "retained",
+      "release_commands": 0,
+      "failsafe_mode": "RTL",
+      "recovery_owner": "companion approach policy",
+      "approach_abort_altitude_m": 8.004
+    },
+    {
+      "scenario": "camera_target_loss",
+      "status": "PASS",
+      "final_state": "ABORTED",
+      "payload": "retained",
+      "release_commands": 0,
+      "failsafe_mode": "RTL",
+      "recovery_owner": "companion approach policy",
+      "approach_abort_altitude_m": 8.004
+    },
+    {
+      "scenario": "companion_crash",
+      "status": "PASS",
+      "final_state": "ABORTED",
+      "payload": "retained",
+      "release_commands": 0,
+      "failsafe_mode": "RTL",
+      "recovery_owner": "flight controller independently"
+    },
+    {
+      "scenario": "failed_release",
+      "status": "PASS",
+      "final_state": "HOLD",
+      "payload": "unknown",
+      "release_commands": 1
+    },
+    {
+      "scenario": "false_contact",
+      "status": "PASS",
+      "final_state": "COMPLETE",
+      "payload": "retained",
+      "release_commands": 0
+    },
+    {
+      "scenario": "gnss_degradation",
+      "status": "PASS",
+      "final_state": "ABORTED",
+      "payload": "retained",
+      "release_commands": 0,
+      "failsafe_mode": "LAND",
+      "recovery_owner": "companion requests LAND; FC accepts"
+    },
+    {
+      "scenario": "gnss_loss",
+      "status": "PASS",
+      "final_state": "ABORTED",
+      "payload": "retained",
+      "release_commands": 0,
+      "failsafe_mode": "LAND",
+      "recovery_owner": "flight controller independently"
+    },
+    {
+      "scenario": "jammed_latch",
+      "status": "PASS",
+      "final_state": "COMPLETE",
+      "payload": "retained",
+      "release_commands": 1
+    },
+    {
+      "scenario": "lost_telemetry",
+      "status": "PASS",
+      "final_state": "ABORTED",
+      "payload": "retained",
+      "release_commands": 0,
+      "failsafe_mode": "RTL",
+      "recovery_owner": "flight controller independently"
+    },
+    {
+      "scenario": "low_battery",
+      "status": "PASS",
+      "final_state": "ABORTED",
+      "payload": "retained",
+      "release_commands": 0,
+      "failsafe_mode": "RTL",
+      "recovery_owner": "flight controller independently"
+    },
+    {
+      "scenario": "nominal",
+      "status": "PASS",
+      "final_state": "COMPLETE",
+      "payload": "separated",
+      "release_commands": 1
+    },
+    {
+      "scenario": "rangefinder_failure",
+      "status": "PASS",
+      "final_state": "ABORTED",
+      "payload": "retained",
+      "release_commands": 0,
+      "failsafe_mode": "RTL",
+      "recovery_owner": "companion approach policy",
+      "approach_abort_altitude_m": 8.004
+    },
+    {
+      "scenario": "rc_loss",
+      "status": "PASS",
+      "final_state": "ABORTED",
+      "payload": "retained",
+      "release_commands": 0,
+      "failsafe_mode": "RTL",
+      "recovery_owner": "flight controller independently"
+    },
+    {
+      "scenario": "release_disabled",
+      "status": "PASS",
+      "final_state": "COMPLETE",
+      "payload": "retained",
+      "release_commands": 0
+    }
+  ],
+  "disarmed_validation": {
+    "status": "PASS",
+    "parameter_count": 37
+  },
+  "firmware_commit": "92b0cd788ec29406f26c6f9c31d5ceedbd1cc538",
+  "binary_sha256": "c321c0938b4c47dd0004dc4ab16d8dba1e66e76c9295f85921148387ad2dd6e7",
+  "parameter_sha256": "cf433bec02ac70a3086a520ae7b79dc0d2e9d48a677c6e169077f6161ab9145e",
+  "source_sha256": {
+    "flight-software/quadstack/__init__.py": "dd2f5923a435d2de86a32dd8855dc7868d9578aa823bdaef3404738cc56c6600",
+    "flight-software/quadstack/core.py": "2bbb087256efef642a53bc79a6fb2e156cf8ea36d96a3700ce012a282b5d765b",
+    "flight-software/quadstack/delivery.py": "994e5eb20f3ce72df304eb0e628e3f00ec132657afc9ebd97132dda85983c41b",
+    "flight-software/quadstack/perception.py": "4c6963c07b907ca5ee1bbf417adaa5e9dab4fdfb9c02397489fbe093b774086c",
+    "flight-software/quadstack/sensors.py": "61aa437a2eb51721de348c7434dae413259b076d97b852500f481b00648c2846",
+    "flight-software/quadstack/service.py": "fc75ed1883b0397c5a464b4a2a502fe675fe6aa44723c52f217397a7023418ed",
+    "simulation/__init__.py": "cccab6ee8c8c0f07559f457225582373f3cfbb19142887531d1b46ca33ff57c1",
+    "simulation/demo.py": "af226a3017c7b9ef48ed381f6a2cbfa5bbfe7bd74a87d7b5b294b09fbe776538",
+    "simulation/flight_ops_bridge.py": "9284c4b47dccd3e8e471b4f9dfe4448fa5e68a1bdfb0791895df612cb41ea850",
+    "simulation/fly_to.py": "155199b7679697589ea566683a989e726a2d6e5b3c6c62527ca716acc66d1998",
+    "simulation/transport.py": "fe125bbd3ef4b8d03e43044ead73f63cf7740914631a82029f066077f082ed95",
+    "site/flight-ops/check.mjs": "b92aa597e226a64e3b54d6ef3f0a08b7dcb284ccaa250a129ca6841bd7946a55",
+    "site/flight-ops/dist/app.js": "623d8b72096022eb7d822a9293512b21b4eec86a784286cd1a589a6d095bb29d",
+    "site/flight-ops/dist/extras.css": "b5edad05741ccf4a3aef91d3c8bd9d63c9eff7528483b6a66e767d0ac6e009ea",
+    "site/flight-ops/dist/index.html": "a7c59e1911bb17f288a2e13a24231405ed224e9cd478c0905205466da4b08234",
+    "site/flight-ops/dist/styles.css": "c9715e0d7ec594f188c71feec8c9b5de97c4c980844ba9f9301092fcb8b7b71b",
+    "tests/conftest.py": "d402518f109d77abcc3a277c309f00038d0554ec1fd60ee8f5a7cbc3ec6dcfd7",
+    "tests/test_flight_ops.py": "f3520500f22a15525c9e5b685a09a0b53392e055e42accbfe342bbf0037d21d3",
+    "tests/test_isolation.py": "e221cafc7869a447e0ca5626b14e8971faa8f01344960b62f46657597b938cd2",
+    "tests/test_perception.py": "08bd33a74bbfb732a673574c5768977321bd5fc7ca62f0477509e906a38cc679",
+    "tests/test_policy.py": "a0405993cc70c7572b75c18487945085732294e4eb4649e7901e0ee30c154b01",
+    "tests/test_sitl.py": "172250ed539ef5fd349c799fa82e24acdf022c74822db924d0dcc1e79608cac9",
+    "flight-software/quadstack/geographic.py": "628dd39f42ba65de3ad254fa382d82954cdc9093c0a3893f8a95f00b40277990",
+    "simulation/geographic_flight.py": "6e6e2a7746cc70ea653e09a238372b6882cf6236bcf15b07f37a926a645ccd4f",
+    "simulation/columbia-routes.json": "02c7aa2654774c4ed87266498f4146e966ef04b09cb4b92d141156e56679143a",
+    "tests/test_geographic.py": "627c303caedcdb4debff115ebc379a989bfad6bcdbc3da2ee3adf493d5ec1656",
+    "tests/test_geographic_bridge.py": "fa4ff5a9748320672d31390fcdec372276c3d9313dfcf72ccae3d87485b0a0f8",
+    "site/flight-ops/dist/geographic.js": "befdfbe044cc3e1c3114442bef153636579101569de36abb0babd378b9a0a055",
+    "site/flight-ops/dist/geographic.css": "523c3932818a7eec5abbd83199a10132adb5657235a397b16a8861afb95cfb2b",
+    "site/flight-ops/check-runtime.mjs": "b8c93af971fe59c79f5bc6b276c39e88a042441f3566a3e9d839c9430aa3f304"
+  },
+  "post_setup_operator_demo": {
+    "status": "PASS",
+    "final_state": "COMPLETE",
+    "payload": "retained",
+    "release_commands": 0
+  },
+  "post_setup_operator_command": "bash simulation/demo.sh --sitl-flight --output simulation/runs/operator-demo",
+  "position_navigation": {
+    "kind": "position",
+    "position": [
+      20,
+      10,
+      8
+    ],
+    "speed": 3,
+    "status": "PASS",
+    "hardware": false,
+    "payload": "retained",
+    "release_commands": 0,
+    "physics": "stock ArduPilot X quad; concept CAD is visual only",
+    "events": [
+      {
+        "event": "mission_state",
+        "previous": "IDLE",
+        "state": "VALIDATED",
+        "reason": "authenticated position and loaded return reserve accepted"
+      },
+      {
+        "event": "mission_state",
+        "previous": "VALIDATED",
+        "state": "OUTBOUND",
+        "reason": "flight controller reports airborne"
+      },
+      {
+        "event": "mission_state",
+        "previous": "OUTBOUND",
+        "state": "RETURNING",
+        "reason": "target waypoint reached; continuing home"
+      },
+      {
+        "event": "mission_state",
+        "previous": "RETURNING",
+        "state": "COMPLETE",
+        "reason": "home, landed, disarmed"
+      }
+    ],
+    "loaded_roundtrip_estimate_wh": 15.70014161979123,
+    "final_state": "COMPLETE",
+    "final_position_neu": [
+      -0.03339584683727664,
+      0.01815618722703139,
+      -0.006
+    ],
+    "waypoint_reached": [
+      2,
+      3,
+      4
+    ]
+  },
+  "commands": [
+    {
+      "command": "bash simulation/test.sh",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "143",
+      "time": "652.574",
+      "timestamp": "2026-10-10T19:08:38.980985-04:00"
+    },
+    {
+      "command": "PYTHONPATH=flight-software .venv/bin/python -m pytest tests/test_geographic_bridge.py --sitl -q --junitxml=simulation/runs/geographic-bridge-junit.xml",
+      "name": "pytest",
+      "errors": "0",
+      "failures": "0",
+      "skipped": "0",
+      "tests": "9",
+      "time": "31.973",
+      "timestamp": "2026-10-10T19:47:45.750542-04:00"
+    }
+  ],
+  "geographic_routes": [
+    {
+      "route_id": "UAV-COLA-2047",
+      "status": "PASS",
+      "outbound_m": 924.1693859044306,
+      "roundtrip_m": 1848.338771808861,
+      "home_error_m": 0.024031303679392164,
+      "waypoint_reached": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "payload": "retained",
+      "release_commands": 0,
+      "geographic_parameters_sha256": "c9c0514af909557a5ece2e1d4869a79bb95241226299f6c81774f7f6de26f9b1"
+    },
+    {
+      "route_id": "UAV-COLA-3186",
+      "status": "PASS",
+      "outbound_m": 1448.6283993265704,
+      "roundtrip_m": 2897.256798653141,
+      "home_error_m": 0.01443517107719692,
+      "waypoint_reached": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "payload": "retained",
+      "release_commands": 0,
+      "geographic_parameters_sha256": "c701d894ccde86f83341efbf7e9bf4321fc53be1d8e0e737a66917299a44aed6"
+    },
+    {
+      "route_id": "UAV-COLA-5729",
+      "status": "PASS",
+      "outbound_m": 1112.6621547494124,
+      "roundtrip_m": 2225.3243094988247,
+      "home_error_m": 0.022184470539118973,
+      "waypoint_reached": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "payload": "retained",
+      "release_commands": 0,
+      "geographic_parameters_sha256": "ada3f3100a67d7a4875db051dd30018df0dbf6b8fd270fcc8ef651d2d515ce40"
+    }
+  ]
+}

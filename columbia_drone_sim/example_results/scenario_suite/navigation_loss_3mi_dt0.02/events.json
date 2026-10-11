@@ -1,0 +1,38 @@
+[
+  {
+    "t_s": 0.0,
+    "state": "LOADING",
+    "level": "INFO",
+    "message": "Simulation only: actual flight authorization NOT VERIFIED."
+  },
+  {
+    "t_s": 4.0,
+    "state": "CLIMB",
+    "level": "STATE",
+    "message": "Order confirmed; checks passed for virtual mission; climb above hub."
+  },
+  {
+    "t_s": 33.74,
+    "state": "OUTBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 150.0,
+    "state": "OUTBOUND",
+    "level": "DISTURBANCE",
+    "message": "Navigation-confidence fault: terminate mission using idealized local descent, not a real GNSS-denied solution."
+  },
+  {
+    "t_s": 150.04,
+    "state": "EMERGENCY_DESCEND",
+    "level": "STATE",
+    "message": "Navigation lost; normal delivery and return navigation stopped. Emergency surface is an assumed clear virtual area, not a surveyed real landing site."
+  },
+  {
+    "t_s": 348.0,
+    "state": "EMERGENCY_LANDED",
+    "level": "STATE",
+    "message": "Landed on assumed virtual emergency surface; recovery required."
+  }
+]

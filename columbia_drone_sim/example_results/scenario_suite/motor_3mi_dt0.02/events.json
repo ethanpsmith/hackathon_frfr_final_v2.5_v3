@@ -1,0 +1,56 @@
+[
+  {
+    "t_s": 0.0,
+    "state": "LOADING",
+    "level": "INFO",
+    "message": "Simulation only: actual flight authorization NOT VERIFIED."
+  },
+  {
+    "t_s": 4.0,
+    "state": "CLIMB",
+    "level": "STATE",
+    "message": "Order confirmed; checks passed for virtual mission; climb above hub."
+  },
+  {
+    "t_s": 33.74,
+    "state": "OUTBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 150.0,
+    "state": "OUTBOUND",
+    "level": "DISTURBANCE",
+    "message": "Motor 1 maximum-thrust capability reduced by 20%; mission returns conservatively."
+  },
+  {
+    "t_s": 150.04,
+    "state": "RETURN_CLIMB",
+    "level": "STATE",
+    "message": "motor-health degradation Package retained unless already delivered; return to hub."
+  },
+  {
+    "t_s": 150.04,
+    "state": "INBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 240.26,
+    "state": "APPROACH_HOME",
+    "level": "STATE",
+    "message": "Descending approach: reducing altitude and braking toward the pad."
+  },
+  {
+    "t_s": 290.84,
+    "state": "LAND_HOME",
+    "level": "STATE",
+    "message": "Pad alignment confirmed; slow vertical descent. Playback switches to 1x."
+  },
+  {
+    "t_s": 318.02,
+    "state": "COMPLETE",
+    "level": "STATE",
+    "message": "Returned to hub. Mission aborted; package retained."
+  }
+]

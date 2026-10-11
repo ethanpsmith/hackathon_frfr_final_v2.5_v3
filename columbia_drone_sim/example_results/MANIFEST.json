@@ -1,0 +1,5 @@
+{
+  "simulation_only": true,
+  "source_stl_sha256": "8242b03e331f508ca5f28b25d8157265837c2c28847bfa80d163544af7a73ebf",
+  "purpose": "Source project, included user STL, weather provenance and generated simulation examples; not flight-test data."
+}

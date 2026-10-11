@@ -1,0 +1,80 @@
+[
+  {
+    "t_s": 0.0,
+    "state": "LOADING",
+    "level": "INFO",
+    "message": "Simulation only: actual flight authorization NOT VERIFIED."
+  },
+  {
+    "t_s": 4.0,
+    "state": "CLIMB",
+    "level": "STATE",
+    "message": "Order confirmed; checks passed for virtual mission; climb above hub."
+  },
+  {
+    "t_s": 33.74,
+    "state": "OUTBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 271.22,
+    "state": "APPROACH_A",
+    "level": "STATE",
+    "message": "Descending approach: reducing altitude and braking toward the pad."
+  },
+  {
+    "t_s": 322.42,
+    "state": "DESCEND_A",
+    "level": "STATE",
+    "message": "Pad alignment confirmed; slow vertical descent. Playback switches to 1x."
+  },
+  {
+    "t_s": 350.98,
+    "state": "SHUTDOWN_A",
+    "level": "STATE",
+    "message": "Touchdown confirmed; stop rotors and hold before package release."
+  },
+  {
+    "t_s": 361.0,
+    "state": "RELEASE",
+    "level": "STATE",
+    "message": "Motors stopped and weight on ground: unlocking landed cargo. No cable."
+  },
+  {
+    "t_s": 364.02,
+    "state": "DEPART_A",
+    "level": "STATE",
+    "message": "Package released; confirm separation and clear departure area."
+  },
+  {
+    "t_s": 370.04,
+    "state": "RETURN_CLIMB",
+    "level": "STATE",
+    "message": "Separation verified; lift off with reduced mass and return to hub."
+  },
+  {
+    "t_s": 399.82,
+    "state": "INBOUND",
+    "level": "STATE",
+    "message": "Cruise altitude reached; follow planned ground track."
+  },
+  {
+    "t_s": 655.32,
+    "state": "APPROACH_HOME",
+    "level": "STATE",
+    "message": "Descending approach: reducing altitude and braking toward the pad."
+  },
+  {
+    "t_s": 705.94,
+    "state": "LAND_HOME",
+    "level": "STATE",
+    "message": "Pad alignment confirmed; slow vertical descent. Playback switches to 1x."
+  },
+  {
+    "t_s": 733.08,
+    "state": "COMPLETE",
+    "level": "STATE",
+    "message": "Returned to hub. Delivery completed."
+  }
+]

@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "target": "SITL_ONLY",
+  "hardware_enabled": false,
+  "arducopter": {
+    "tag": "Copter-4.6.3",
+    "commit": "92b0cd788ec29406f26c6f9c31d5ceedbd1cc538",
+    "board": "sitl",
+    "model": "x",
+    "speedup": 5
+  },
+  "python": "3.11.13",
+  "dependencies": {
+    "empy": "3.3.4",
+    "fastcrc": "0.5.0",
+    "future": "1.0.0",
+    "iniconfig": "2.3.1",
+    "lxml": "6.0.2",
+    "mavproxy": "1.8.74",
+    "numpy": "2.2.6",
+    "opencv-python-headless": "4.12.0.88",
+    "packaging": "26.3",
+    "pexpect": "4.9.0",
+    "pillow": "11.3.0",
+    "pluggy": "1.6.0",
+    "ptyprocess": "0.7.0",
+    "pygments": "2.21.0",
+    "pymavlink": "2.4.49",
+    "pynmeagps": "1.1.7",
+    "pyserial": "3.5",
+    "pytest": "8.4.2",
+    "setuptools": "80.9.0",
+    "gnureadline": "8.2.13 (macOS)",
+    "geographiclib": "2.1"
+  },
+  "parameter_files": [
+    ".tools/ardupilot/Tools/autotest/default_params/copter.parm",
+    "simulation/sitl.parm"
+  ],
+  "stock_dynamics": {
+    "mass_kg": 3.0,
+    "diagonal_m": 0.35,
+    "battery_full_v": 12.6,
+    "battery_capacity_ah": 0,
+    "capacity_meaning": "unlimited stock physical model"
+  },
+  "selected_concept_assumptions": {
+    "mass_loaded_kg": 5.7,
+    "payload_kg": 1.814,
+    "diagonal_m": 0.65,
+    "propeller_diameter_m": 0.4064,
+    "battery_series_cells": 6,
+    "battery_ah": 10
+  },
+  "model_warning": "Stock dynamics are a software-test fixture; concept hardware performance is not modeled or validated.",
+  "hardware_assignments": {
+    "serial_ports": null,
+    "servo_output": null,
+    "gpio_inputs": null,
+    "can_node_ids": null,
+    "esc_protocol": null,
+    "pwm_endpoints": null
+  },
+  "sources_reviewed": "2026-10-10",
+  "second_clean_environment_verified": false,
+  "geographic_profile": {
+    "scope": "Columbia WGS84 SITL only",
+    "home_msl_assumption_m": 100,
+    "max_outbound_m": 2000,
+    "altitude_above_home_m": [
+      20,
+      80
+    ],
+    "speed_m_s": [
+      0.5,
+      5
+    ],
+    "parameter_overlay": "per-run geographic-sitl-only.parm; fence radius/altitude, RTL altitude, waypoint speed only",
+    "route_catalog": "simulation/columbia-routes.json"
+  }
+}

@@ -1,0 +1,10 @@
+.DS_Store
+**/.venv/
+**/.tools/
+**/node_modules/
+**/__pycache__/
+**/.pytest_cache/
+**/simulation/runs/
+**/*.log
+**/*.BIN
+**/*.tlog
