@@ -8,3 +8,4 @@ todo.txt
 .DS_Store
 
 *.swp
+*.pyc
