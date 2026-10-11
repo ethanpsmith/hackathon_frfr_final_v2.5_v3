@@ -16,15 +16,16 @@ except ImportError:
 
 
 
-DT = 2 / 240                  # Physics step, seconds.
+DT = 1 / 240                  # Physics step, seconds.
 CONTROL_EVERY = 10            # Run the flight controller every 10 physics steps.
 TELEMETRY_HZ = 10             # CSV samples per simulated second.
 TELEMETRY_EVERY = max(1, round(1.0 / (TELEMETRY_HZ * DT)))
 RECORD_FPS = 30
+# Camera occupies the left half of the final 1920x1080 video. Its projection
+# uses this panel's aspect ratio, so the flight view is never stretched.
 RECORD_WIDTH = 960
-RECORD_HEIGHT = 540
+RECORD_HEIGHT = 1080
 RECORD_EVERY = max(1, round(1.0 / (RECORD_FPS * DT)))
-LIVE_GRAPH_SECONDS = 10.0
 MASS = 5.4                    # kg
 SPAN = 0.886
 ROTOR_RADIUS = 0.095
@@ -71,9 +72,7 @@ WAYPOINTS = np.array([
 # [centre position, half-size] for static, collidable boxes.  They sit on the
 # diagonal flight leg so the depth camera has to guide the drone around them.
 OBSTACLE_LAYOUT = [
-    ([8.0, 8.0, 1.10], [0.45, 0.45, 1.10]),
-    ([28.0, 28.0, 1.25], [0.55, 0.55, 1.25]),
-    ([55.0, 55.0, 1.00], [0.50, 0.50, 1.00]),
+    ([8.0, 8.0, 1.10], [0.45, 0.45, 1.10])
 ]
 
 MEAN_WIND = np.array([2.0, -0.8, 0.0])  # Average wind velocity, m/s.
@@ -251,10 +250,11 @@ def render_chase_frame(position, rotation):
 class FlightRecorder:
     """Burn live graphs into every frame BEFORE sending it to the MP4 encoder."""
 
-    GRAPH_HEIGHT = 300
-    VERSION = 'LIVE GRAPHS v3'
+    GRAPH_WIDTH = 960
+    GRAPH_HEIGHT = RECORD_HEIGHT
+    VERSION = 'LIVE GRAPHS v5 - 16:9 reference plot style'
 
-    def __init__(self, path):
+    def __init__(self, path, telemetry_name='live flight'):
         from collections import deque
         from pathlib import Path
         import shutil
@@ -262,22 +262,63 @@ class FlightRecorder:
         import tempfile
         try:
             from PIL import Image, ImageDraw, ImageFont
+            from matplotlib.figure import Figure
+            from matplotlib.backends.backend_agg import FigureCanvasAgg
         except ImportError as error:
             raise RuntimeError(
-                'Recording graphs requires Pillow: python3 -m pip install pillow'
+                'Recording graphs requires Pillow and Matplotlib: '
+                'python3 -m pip install pillow matplotlib'
             ) from error
         self.Image, self.ImageDraw = Image, ImageDraw
         self.path = str(Path(path).expanduser().resolve())
         if Path(self.path).suffix.lower() != '.mp4':
             raise ValueError('--record must specify a .mp4 file')
         Path(self.path).parent.mkdir(parents=True, exist_ok=True)
-        self.size = (RECORD_WIDTH, RECORD_HEIGHT + self.GRAPH_HEIGHT)
+        self.size = (RECORD_WIDTH + self.GRAPH_WIDTH, RECORD_HEIGHT)
         self.history = deque()
         self.frames = 0
         self.writer = None
         self.process = None
         self.error_log = None
         self.closed = False
+        # Use the same Matplotlib primitives, fonts, colours and line styles
+        # as plot_flight_telemetry.py. Agg also works in headless recordings.
+        self.figure = Figure(figsize=(12, 12 * self.GRAPH_HEIGHT / self.GRAPH_WIDTH),
+                             dpi=self.GRAPH_WIDTH / 12,
+                             facecolor='white', constrained_layout=True)
+        self.plot_canvas = FigureCanvasAgg(self.figure)
+        self.axes = self.figure.subplots(3, 1, sharex=True)
+        self.figure.suptitle(f'Quadcopter telemetry — {telemetry_name}',
+                             fontsize=15, fontweight='bold')
+        motor_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+        self.motor_lines = [self.axes[0].plot([], [], color=color,
+                            linewidth=1.3, label=f'Rotor {i + 1}')[0]
+                            for i, color in enumerate(motor_colors)]
+        self.total_line, = self.axes[0].plot([], [], color='black',
+                                           linewidth=2.2, label='Total thrust')
+        self.axes[0].set_ylabel('Thrust (N)')
+        self.axes[0].set_title('Motor thrust commands')
+        self.axes[0].legend(ncol=5, fontsize=9, loc='upper right')
+        self.weather_line, = self.axes[1].plot([], [], color='#6a3d9a',
+                            linewidth=2, label='Applied weather force')
+        self.estimated_line, = self.axes[1].plot([], [], color='#e31a1c',
+                            linewidth=1.8, linestyle='--',
+                            label='Controller-estimated disturbance')
+        self.axes[1].set_ylabel('Force magnitude (N)')
+        self.axes[1].set_title('Weather impact: actual versus inferred')
+        self.axes[1].legend(loc='upper right')
+        component_colors = ['#377eb8', '#4daf4a', '#e41a1c']
+        self.component_lines = [self.axes[2].plot([], [], color=color,
+                                linewidth=1.6, label=f'Weather $F_{name}$')[0]
+                                for name, color in zip('XYZ', component_colors)]
+        self.axes[2].axhline(0.0, color='black', linewidth=0.8)
+        self.axes[2].set_xlabel('Simulation time (s)')
+        self.axes[2].set_ylabel('Force component (N)')
+        self.axes[2].set_title('Applied weather-force components')
+        self.axes[2].legend(ncol=3, loc='upper left')
+        for axis in self.axes:
+            axis.set_facecolor('white')
+            axis.grid(alpha=0.25)
         self.fonts = {}
         for size in (12, 14, 17):
             for name in ('DejaVuSans.ttf',
@@ -320,68 +361,33 @@ class FlightRecorder:
         print(f'Recording file: {self.path}')
 
     def compose(self, camera_rgb, sim_time):
-        """Keep the full camera image and append an opaque graph strip."""
+        """Place the live reference-style plots beside the flight in a 16:9 frame."""
         camera_rgb = np.asarray(camera_rgb, dtype=np.uint8)
         expected_shape = (RECORD_HEIGHT, RECORD_WIDTH, 3)
         if camera_rgb.shape != expected_shape:
             raise ValueError(f'Camera frame shape {camera_rgb.shape}, expected {expected_shape}')
-        canvas = self.Image.new('RGB', self.size, (17, 23, 34))
-        canvas.paste(self.Image.fromarray(np.ascontiguousarray(camera_rgb)), (0, 0))
-        draw = self.ImageDraw.Draw(canvas)
-        now, thrusts, weather, estimated = self.history[-1]
-        header = (f'{self.VERSION}   |   t = {sim_time:.2f} s   |   '
-                  f'Total thrust: {thrusts.sum():.1f} N   |   '
-                  f'Weather: {np.linalg.norm(weather):.2f} N')
-        draw.text((12, RECORD_HEIGHT + 10), header,
-                  font=self.fonts[17], fill=(242, 246, 252))
-        titles = ['Rotor thrust (N)', 'Applied weather force (N)',
-                  'Estimated disturbance (N)']
-        colors = [(78, 183, 255), (114, 231, 148), (255, 164, 95), (234, 132, 239)]
         samples = list(self.history)
-        start = max(0.0, sim_time - LIVE_GRAPH_SECONDS)
-        end = max(LIVE_GRAPH_SECONDS, sim_time)
-        for index, title in enumerate(titles):
-            left = index * RECORD_WIDTH // 3
-            right = (index + 1) * RECORD_WIDTH // 3
-            draw.text((left + 12, RECORD_HEIGHT + 45), title,
-                      font=self.fonts[14], fill=(237, 242, 252))
-            legends = ('M0', 'M1', 'M2', 'M3') if index == 0 else ('Fx', 'Fy', 'Fz')
-            for k, label in enumerate(legends):
-                lx = left + 14 + k * 65
-                draw.line((lx, RECORD_HEIGHT + 75, lx + 12, RECORD_HEIGHT + 75),
-                          fill=colors[k], width=3)
-                draw.text((lx + 17, RECORD_HEIGHT + 68), label,
-                          font=self.fonts[12], fill=(221, 230, 242))
-            values = np.asarray([sample[index + 1] for sample in samples])
-            if index == 0:
-                low, high = 0.0, max(20.0, float(np.max(values)) * 1.15)
-            else:
-                high = max(0.5, float(np.max(np.abs(values))) * 1.2)
-                low = -high
-            x0, x1 = left + 48, right - 16
-            y0, y1 = RECORD_HEIGHT + 99, self.size[1] - 31
-            for fraction in (0.0, 0.5, 1.0):
-                y = round(y0 + fraction * (y1 - y0))
-                value = high - fraction * (high - low)
-                draw.line((x0, y, x1, y), fill=(58, 70, 89), width=1)
-                draw.text((left + 3, y - 7), f'{value:.1f}',
-                          font=self.fonts[12], fill=(165, 181, 203))
-            draw.line((x0, y0, x0, y1, x1, y1), fill=(112, 132, 158), width=1)
-            draw.text((x0, y1 + 8), f'{start:.1f}s',
-                      font=self.fonts[12], fill=(183, 198, 217))
-            draw.text((x1 - 43, y1 + 8), f'{end:.1f}s',
-                      font=self.fonts[12], fill=(183, 198, 217))
-            for k in range(values.shape[1]):
-                points = [
-                    (round(x0 + np.clip((sample[0] - start) / (end - start), 0, 1) * (x1 - x0)),
-                     round(y1 - np.clip((value - low) / (high - low), 0, 1) * (y1 - y0)))
-                    for sample, value in zip(samples, values[:, k])
-                ]
-                if len(points) > 1:
-                    draw.line(points, fill=colors[k], width=2)
-                px, py = points[-1]
-                draw.ellipse((px - 2, py - 2, px + 2, py + 2), fill=colors[k])
-        return np.asarray(canvas)
+        times = np.asarray([sample[0] for sample in samples])
+        thrusts = np.asarray([sample[1] for sample in samples])
+        weather = np.asarray([sample[2] for sample in samples])
+        estimated = np.asarray([sample[3] for sample in samples])
+        for i, line in enumerate(self.motor_lines):
+            line.set_data(times, thrusts[:, i])
+        self.total_line.set_data(times, thrusts.sum(axis=1))
+        self.weather_line.set_data(times, np.linalg.norm(weather, axis=1))
+        self.estimated_line.set_data(times, np.linalg.norm(estimated, axis=1))
+        for i, line in enumerate(self.component_lines):
+            line.set_data(times, weather[:, i])
+        for axis in self.axes:
+            axis.relim()
+            axis.autoscale_view(scalex=False, scaley=True)
+        # Retain the entire flight, matching the static figure, and leave a
+        # little horizontal whitespace at each edge as Matplotlib normally does.
+        end = max(1.0, sim_time)
+        self.axes[2].set_xlim(-0.05 * end, 1.05 * end)
+        self.plot_canvas.draw()
+        graphs = np.asarray(self.plot_canvas.buffer_rgba())[:, :, :3]
+        return np.concatenate((camera_rgb, graphs), axis=1)
 
     def add_frame(self, camera_rgb, sim_time, thrusts, weather, estimated):
         if self.closed:
@@ -392,8 +398,6 @@ class FlightRecorder:
         if not all(np.all(np.isfinite(v)) for v in vectors):
             raise ValueError('Nonfinite video telemetry')
         self.history.append((float(sim_time), *vectors))
-        while self.history and self.history[0][0] < sim_time - LIVE_GRAPH_SECONDS:
-            self.history.popleft()
         frame = self.compose(camera_rgb, sim_time)
         if frame.shape != (self.size[1], self.size[0], 3):
             raise RuntimeError('Video frame dimensions do not match the encoder')
@@ -672,7 +676,7 @@ def main():
     parser.add_argument('--seed', type=int, default=7, help='Seed for reproducible random gusts.')
     parser.add_argument('--csv', help='Optional telemetry CSV path.')
     parser.add_argument('--record', metavar='FILE.mp4',
-                        help='Record a 30 FPS chase-camera MP4 with live graphs below the flight view.')
+                        help='Record a 1920x1080 (16:9), 30 FPS MP4 with flight left and live graphs right.')
     parser.add_argument('--record-test', action='store_true',
                         help='With --record, encode a 3-second synthetic graph test without PyBullet.')
     parser.add_argument('--version', action='version', version=FlightRecorder.VERSION)
@@ -730,7 +734,9 @@ def main():
     recorder = None
     if args.record:
         try:
-            recorder = FlightRecorder(args.record)
+            from pathlib import Path
+            recorder = FlightRecorder(args.record,
+                                      Path(args.csv).name if args.csv else 'live flight')
         except Exception:
             if stream:
                 stream.close()
