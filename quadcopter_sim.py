@@ -20,6 +20,10 @@ DT = 1 / 240                  # Physics step, seconds.
 CONTROL_EVERY = 10            # Run the flight controller every 10 physics steps.
 TELEMETRY_HZ = 10             # CSV samples per simulated second.
 TELEMETRY_EVERY = max(1, round(1.0 / (TELEMETRY_HZ * DT)))
+RECORD_FPS = 30
+RECORD_WIDTH = 960
+RECORD_HEIGHT = 540
+RECORD_EVERY = max(1, round(1.0 / (RECORD_FPS * DT)))
 MASS = 5.4                    # kg
 SPAN = 0.886
 ROTOR_RADIUS = 0.095
@@ -198,6 +202,30 @@ def follow_drone_camera(position, quaternion):
         cameraPitch=camera_pitch,
         cameraTargetPosition=position.tolist(),
     )
+
+
+def render_chase_frame(position, rotation):
+    """Render an RGB chase-camera frame for MP4 recording."""
+    forward = rotation[:, 0]
+    forward = forward / max(np.linalg.norm(forward), 1e-12)
+    eye = position - 5.5 * forward + np.array([0.0, 0.0, 2.4])
+    target = position + np.array([0.0, 0.0, 0.35])
+    view = p.computeViewMatrix(eye.tolist(), target.tolist(), [0.0, 0.0, 1.0])
+    projection = p.computeProjectionMatrixFOV(
+        fov=60.0,
+        aspect=RECORD_WIDTH / RECORD_HEIGHT,
+        nearVal=0.1,
+        farVal=250.0,
+    )
+    _, _, rgba, _, _ = p.getCameraImage(
+        RECORD_WIDTH,
+        RECORD_HEIGHT,
+        viewMatrix=view,
+        projectionMatrix=projection,
+        renderer=p.ER_TINY_RENDERER,
+    )
+    return np.asarray(rgba, dtype=np.uint8).reshape(
+        RECORD_HEIGHT, RECORD_WIDTH, 4)[:, :, :3]
 
 
 def drone_camera_depth(drone, ground, position, rotation, route_direction):
@@ -419,6 +447,8 @@ def main():
                         help='Disable the obstacle course and camera avoidance.')
     parser.add_argument('--seed', type=int, default=7, help='Seed for reproducible random gusts.')
     parser.add_argument('--csv', help='Optional telemetry CSV path.')
+    parser.add_argument('--record', metavar='FILE.mp4',
+                        help='Record a 30 FPS chase-camera MP4.')
     args = parser.parse_args()
     if p is None:
         raise SystemExit('Install dependencies: python3 -m pip install pybullet numpy')
@@ -464,6 +494,29 @@ def main():
     peak_tilt, minimum_height = 0.0, float('inf')
     stream = open(args.csv, 'w', newline='') if args.csv else None
     writer = csv.writer(stream) if stream else None
+    video_writer = None
+    cv2 = None
+    if args.record:
+        try:
+            import cv2 as cv2_module
+            cv2 = cv2_module
+        except ImportError:
+            if stream:
+                stream.close()
+            p.disconnect(client)
+            raise SystemExit('MP4 recording needs OpenCV. Install it with: python3 -m pip install opencv-python')
+        video_writer = cv2.VideoWriter(
+            args.record,
+            cv2.VideoWriter_fourcc(*'mp4v'),
+            RECORD_FPS,
+            (RECORD_WIDTH, RECORD_HEIGHT),
+        )
+        if not video_writer.isOpened():
+            if stream:
+                stream.close()
+            p.disconnect(client)
+            raise SystemExit(f'Could not open MP4 output: {args.record}')
+        print(f'Recording chase view to {args.record} at {RECORD_FPS} FPS.')
     if writer:
         writer.writerow(['time_s', 'waypoint', 'x', 'y', 'z', 'vx', 'vy', 'vz',
                          'ax', 'ay', 'az', 'roll_rad', 'pitch_rad', 'yaw_rad',
@@ -487,6 +540,12 @@ def main():
             position, velocity = np.array(pos_tuple), np.array(vel_tuple)
             omega = np.array(omega_tuple)
             rotation = np.array(p.getMatrixFromQuaternion(quaternion)).reshape(3, 3)
+
+            # Capture at a fixed simulated frame rate in both GUI and headless
+            # mode.  Convert PyBullet's RGB image to OpenCV's BGR ordering.
+            if video_writer is not None and step % RECORD_EVERY == 0:
+                rgb = render_chase_frame(position, rotation)
+                video_writer.write(cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
 
             # Render the actual body-mounted camera at 12 Hz.  The stabilized
             # gimbal tracks the active waypoint, so it sees obstacles ahead of
@@ -578,6 +637,9 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        if video_writer is not None:
+            video_writer.release()
+            print(f'Saved MP4 recording: {args.record}')
         if stream:
             stream.close()
         if p.isConnected(client):
