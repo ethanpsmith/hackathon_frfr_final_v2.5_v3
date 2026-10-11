@@ -1,1 +1,5 @@
-pip install pybullet
+numpy
+pybullet
+matplotlib
+Pillow
+opencv-python
